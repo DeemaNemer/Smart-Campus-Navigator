@@ -1,0 +1,50 @@
+name: smart_campus_app
+description: "Smart Campus Navigator - Birzeit University"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+
+  # Networking (for connecting to FastAPI server)
+  http: ^1.2.2
+  dio: ^5.7.0
+
+  # Local Storage
+  shared_preferences: ^2.3.2
+
+  # UI Helpers
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.10+1
+  cached_network_image: ^3.4.1
+
+  # Maps
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+
+  # In-app Routing
+  go_router: ^14.2.7
+
+  # WiFi Scanning (for later)
+  wifi_scan: ^0.4.1+2
+  permission_handler: ^11.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/maps/
+    
