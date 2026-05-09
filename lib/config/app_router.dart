@@ -1,47 +1,67 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:smart_campus_app/screens/auth/auth_gate_screen.dart';
 import '../models/room.dart';
 import '../models/professor.dart';
 import '../models/event.dart';
+import '../screens/auth/splash_screen.dart';
+import '../screens/auth/login_screen.dart';
+import '../screens/auth/register_screen.dart';
+import '../screens/auth/verify_email_screen.dart';
+import '../screens/auth/forgot_password_screen.dart';
+import '../screens/auth/reset_password_screen.dart';
 import '../screens/home/home_shell.dart';
 import '../screens/details/room_details_screen.dart';
 import '../screens/details/professor_details_screen.dart';
 import '../screens/details/event_details_screen.dart';
 import '../screens/navigation/navigation_screen.dart';
+
 class AppRouter {
   AppRouter._();
 
   static final GoRouter router = GoRouter(
-    
-    initialLocation: '/auth',
+    initialLocation: '/',
     routes: [
-      // Main shell with bottom navigation
+      // Splash
       GoRoute(
-  path: '/auth',
-  builder: (context, state) => const AuthGateScreen(),
-),
-GoRoute(
-  path: '/',
-  builder: (context, state) => const HomeShell(),
-),
-//مؤقتا حطينا صفحة تسجيل الدخول والتسجيل كصفحات مستقلة، لكن ممكن ندمجهم في صفحة واحدة فيها تبويبين أو أزرار للتبديل بينهما
-GoRoute(
-  path: '/login',
-  builder: (context, state) => const Scaffold(
-    body: Center(child: Text('Login Screen')),
-  ),
-),
+        path: '/',
+        builder: (context, state) => const SplashScreen(),
+      ),
 
-GoRoute(
-  path: '/register',
-  builder: (context, state) => const Scaffold(
-    body: Center(child: Text('Register Screen')),
-  ),
-),
+      // Auth routes
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/verify-email',
+        builder: (context, state) {
+          final email = state.extra as String;
+          return VerifyEmailScreen(email: email);
+        },
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) {
+          final token = (state.extra as String?) ?? '';
+          return ResetPasswordScreen(prefilledToken: token);
+        },
+      ),
 
+      // Home (after login)
+      GoRoute(
+        path: '/home',
+        builder: (context, state) => const HomeShell(),
+      ),
 
-      // Room details
+      // Details
       GoRoute(
         path: '/room',
         builder: (context, state) {
@@ -49,8 +69,6 @@ GoRoute(
           return RoomDetailsScreen(room: room);
         },
       ),
-
-      // Professor details
       GoRoute(
         path: '/professor',
         builder: (context, state) {
@@ -58,8 +76,6 @@ GoRoute(
           return ProfessorDetailsScreen(professor: professor);
         },
       ),
-
-      // Event details
       GoRoute(
         path: '/event',
         builder: (context, state) {
@@ -67,7 +83,8 @@ GoRoute(
           return EventDetailsScreen(event: event);
         },
       ),
-      // Navigation screen
+
+      // Navigation
       GoRoute(
         path: '/navigate',
         builder: (context, state) {
@@ -76,7 +93,6 @@ GoRoute(
         },
       ),
     ],
-    
     errorBuilder: (context, state) => Scaffold(
       appBar: AppBar(title: const Text('Error')),
       body: Center(
