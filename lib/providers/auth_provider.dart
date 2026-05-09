@@ -133,6 +133,35 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return null;
     }
   }
+  // Google Sign-In
+  Future<bool> signInWithGoogle({String userType = 'guest'}) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final result = await _authService.signInWithGoogle(userType: userType);
+
+      if (result == null) {
+        // User cancelled
+        state = state.copyWith(isLoading: false);
+        return false;
+      }
+
+      await _authService.saveSession(result.accessToken, result.user);
+
+      state = AuthState(
+        status: AuthStatus.authenticated,
+        user: result.user,
+        token: result.accessToken,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+      return false;
+    }
+  }
 
   // Verify Email (after register)
   Future<bool> verifyEmail(String email, String code) async {

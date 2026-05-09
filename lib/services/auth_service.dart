@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../config/app_constants.dart';
 import '../models/app_user.dart';
-
+import 'package:google_sign_in/google_sign_in.dart';
 class AuthResult {
   final String accessToken;
   final AppUser user;
@@ -13,7 +13,11 @@ class AuthResult {
 
 class AuthService {
   late final Dio _dio;
-
+// Google Sign-In instance
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: AppConstants.googleWebClientId,
+    scopes: ['email', 'profile'],
+  );
   // Singleton
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
@@ -188,6 +192,57 @@ class AuthService {
       throw _handleAuthError(e);
     }
   }
+  // ============================================
+  // Google Sign-In
+  // ============================================
+  Future<AuthResult?> signInWithGoogle({String userType = 'guest'}) async {
+    try {
+      // Step 1: Show Google sign-in dialog
+      final GoogleSignInAccount? account = await _googleSignIn.signIn();
+
+      if (account == null) {
+        // User cancelled
+        return null;
+      }
+
+      // Step 2: Get authentication tokens
+      final GoogleSignInAuthentication auth = await account.authentication;
+      final String? idToken = auth.idToken;
+
+      if (idToken == null) {
+        throw 'Failed to get Google ID token. Check your Web Client ID.';
+      }
+
+      // Step 3: Send token to our backend
+      final response = await _dio.post(
+        '/google-login',
+        data: {
+          'id_token': idToken,
+          'user_type': userType,
+        },
+      );
+
+      final data = response.data as Map<String, dynamic>;
+      return AuthResult(
+        accessToken: data['access_token'] as String,
+        user: AppUser.fromJson(data['user'] as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      throw _handleAuthError(e);
+    } catch (e) {
+      // Sign out from Google on any error
+      await _googleSignIn.signOut();
+      rethrow;
+    }
+  }
+
+  Future<void> signOutGoogle() async {
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {
+      // Ignore errors
+    }
+  }
 
   // ============================================
   // Local storage helpers
@@ -214,10 +269,12 @@ class AuthService {
     }
   }
 
-  Future<void> clearSession() async {
+Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(AppConstants.tokenKey);
     await prefs.remove(AppConstants.userKey);
+    // Also sign out from Google
+    await signOutGoogle();
   }
 
   // ============================================

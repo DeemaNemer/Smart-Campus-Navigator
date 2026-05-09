@@ -38,7 +38,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context.go('/home');
     }
   }
+  Future<void> _handleGoogleLogin() async {
+    final success = await ref.read(authProvider.notifier).signInWithGoogle();
 
+    if (!mounted) return;
+
+    if (success) {
+      context.go('/home');
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -68,6 +76,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 24),
                 _buildDivider(),
                 const SizedBox(height: 24),
+                _buildGoogleButton(),
+                const SizedBox(height: 12),
                 _buildGuestButton(),
                 const SizedBox(height: 24),
                 _buildSignUpLink(),
@@ -242,7 +252,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ],
     );
   }
-
+Widget _buildGoogleButton() {
+    return OutlinedButton.icon(
+      onPressed: _handleGoogleLogin,
+      icon: Container(
+        width: 20,
+        height: 20,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+        ),
+        child: const Center(
+          child: Text(
+            'G',
+            style: TextStyle(
+              color: Color(0xFF4285F4),
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      ),
+      label: const Text(
+        'Sign in with Google',
+        style: TextStyle(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        side: const BorderSide(color: AppColors.border, width: 1.5),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        backgroundColor: AppColors.white,
+      ),
+    );
+  }
   Widget _buildGuestButton() {
     return OutlinedButton.icon(
       onPressed: () {
