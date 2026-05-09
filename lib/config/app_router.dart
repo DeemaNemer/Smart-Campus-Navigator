@@ -14,6 +14,7 @@ import '../screens/details/room_details_screen.dart';
 import '../screens/details/professor_details_screen.dart';
 import '../screens/details/event_details_screen.dart';
 import '../screens/navigation/navigation_screen.dart';
+import '../screens/events/create_event_screen.dart';
 
 class AppRouter {
   AppRouter._();
@@ -83,7 +84,17 @@ class AppRouter {
           return EventDetailsScreen(event: event);
         },
       ),
-
+      GoRoute(
+        path: '/event-details',
+        builder: (context, state) {
+          final event = state.extra as Event;
+          return EventDetailsScreen(event: event);
+        },
+      ),
+      GoRoute(
+        path: '/create-event',
+        builder: (context, state) => const CreateEventScreen(),
+      ),
       // Navigation
       GoRoute(
         path: '/navigate',

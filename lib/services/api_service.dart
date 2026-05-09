@@ -157,6 +157,41 @@ class ApiService {
       throw _handleError(e);
     }
   }
+  Future<Event> createEvent({
+  required String title,
+  required String description,
+  required String date,
+  required String time,
+  int? locationRoomId,
+  required String targetCategory,
+}) async {
+  try {
+    final response = await _dio.post('/events', data: {
+      'title': title,
+      'description': description,
+      'date': date,
+      'time': time,
+      'location_room_id': locationRoomId,
+      'target_category': targetCategory,
+    });
+    return Event.fromJson(response.data as Map<String, dynamic>);
+  } on DioException catch (e) {
+    throw _handleError(e);
+  }
+}
+
+Future<List<Room>> getAllRoomsForPicker() async {
+  try {
+    final response = await _dio.get('/rooms');
+    final data = response.data;
+    final List items = _extractList(data, 'rooms');
+    return items
+        .map((json) => Room.fromJson(json as Map<String, dynamic>))
+        .toList();
+  } on DioException catch (e) {
+    throw _handleError(e);
+  }
+}
 // ============================================
   // Calculate navigation path
   // POST /navigate with body:
