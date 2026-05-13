@@ -4,9 +4,9 @@ import '../services/auth_service.dart';
 
 // Authentication state
 enum AuthStatus {
-  initial,        // App just opened, checking storage
+  initial, // App just opened, checking storage
   unauthenticated, // No user logged in
-  authenticated,   // User logged in
+  authenticated, // User logged in
 }
 
 class AuthState {
@@ -41,7 +41,8 @@ class AuthState {
     );
   }
 
-  bool get isAuthenticated => status == AuthStatus.authenticated && user != null;
+  bool get isAuthenticated =>
+      status == AuthStatus.authenticated && user != null;
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
@@ -133,6 +134,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return null;
     }
   }
+
   // Google Sign-In
   Future<bool> signInWithGoogle({String userType = 'guest'}) async {
     state = state.copyWith(isLoading: true, clearError: true);

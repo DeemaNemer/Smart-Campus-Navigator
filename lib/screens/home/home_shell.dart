@@ -36,12 +36,10 @@ class _HomeShellState extends State<HomeShell> {
           ),
         ],
       ),
-
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),

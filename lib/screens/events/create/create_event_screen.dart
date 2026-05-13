@@ -13,8 +13,7 @@ class CreateEventScreen extends ConsumerStatefulWidget {
   const CreateEventScreen({super.key});
 
   @override
-  ConsumerState<CreateEventScreen> createState() =>
-      _CreateEventScreenState();
+  ConsumerState<CreateEventScreen> createState() => _CreateEventScreenState();
 }
 
 class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
@@ -230,9 +229,9 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.info.withOpacity(0.1),
+        color: AppColors.info.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.info.withOpacity(0.3)),
+        border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
       ),
       child: const Row(
         children: [
@@ -291,7 +290,8 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today, color: AppColors.primary, size: 18),
+            const Icon(Icons.calendar_today,
+                color: AppColors.primary, size: 18),
             const SizedBox(width: 8),
             Text(
               _selectedDate == null
@@ -324,9 +324,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
             const Icon(Icons.access_time, color: AppColors.primary, size: 18),
             const SizedBox(width: 8),
             Text(
-              _selectedTime == null
-                  ? 'Time'
-                  : _selectedTime!.format(context),
+              _selectedTime == null ? 'Time' : _selectedTime!.format(context),
               style: TextStyle(
                 color: _selectedTime == null
                     ? AppColors.textLight
@@ -409,7 +407,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.primary.withOpacity(0.15)
+                ? AppColors.primary.withValues(alpha: 0.15)
                 : AppColors.cardBg,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
@@ -430,9 +428,8 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColors.textSecondary,
+                  color:
+                      isSelected ? AppColors.primary : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -446,9 +443,9 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(0.1),
+        color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.error.withOpacity(0.3)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -535,23 +532,18 @@ class _RoomPickerSheetState extends ConsumerState<_RoomPickerSheet> {
               final floor = FloorConfigs.all[i];
               final isSelected = floor.floor == _selectedFloor;
               return GestureDetector(
-                onTap: () =>
-                    setState(() => _selectedFloor = floor.floor),
+                onTap: () => setState(() => _selectedFloor = floor.floor),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.cardBg,
+                    color: isSelected ? AppColors.primary : AppColors.cardBg,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     'Floor ${floor.floor}',
                     style: TextStyle(
-                      color: isSelected
-                          ? AppColors.white
-                          : AppColors.primary,
+                      color: isSelected ? AppColors.white : AppColors.primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
@@ -586,7 +578,7 @@ class _RoomPickerSheetState extends ConsumerState<_RoomPickerSheet> {
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor:
-                          AppColors.primary.withOpacity(0.15),
+                          AppColors.primary.withValues(alpha: 0.15),
                       child: Icon(
                         _getIconForType(room.type),
                         color: AppColors.primary,
@@ -595,8 +587,7 @@ class _RoomPickerSheetState extends ConsumerState<_RoomPickerSheet> {
                     ),
                     title: Text(
                       room.name,
-                      style:
-                          const TextStyle(fontWeight: FontWeight.w600),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     subtitle: Text(room.typeLabel),
                     trailing: const Icon(Icons.chevron_right,
@@ -614,11 +605,16 @@ class _RoomPickerSheetState extends ConsumerState<_RoomPickerSheet> {
 
   IconData _getIconForType(String type) {
     switch (type) {
-      case 'office': return Icons.business_center;
-      case 'lab': return Icons.science;
-      case 'classroom': return Icons.school;
-      case 'bathroom': return Icons.wc;
-      default: return Icons.meeting_room;
+      case 'office':
+        return Icons.business_center;
+      case 'lab':
+        return Icons.science;
+      case 'classroom':
+        return Icons.school;
+      case 'bathroom':
+        return Icons.wc;
+      default:
+        return Icons.meeting_room;
     }
   }
 }

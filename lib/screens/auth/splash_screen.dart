@@ -63,7 +63,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: AppColors.white.withOpacity(0.2),
+                color: AppColors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -98,7 +98,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             Text(
               'Birzeit University',
               style: TextStyle(
-                color: AppColors.white.withOpacity(0.8),
+                color: AppColors.white.withValues(alpha: 0.8),
                 fontSize: 14,
               ),
             ),

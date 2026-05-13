@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:latlong2/latlong.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/campus_buildings.dart';
@@ -24,20 +23,18 @@ class _OutdoorNavigationScreenState
     extends ConsumerState<OutdoorNavigationScreen> {
   CampusBuilding? _from;
   CampusBuilding? _to;
+  String? _lastFittedRouteKey;
   final MapController _mapController = MapController();
 
   @override
   void initState() {
     super.initState();
     if (widget.fromId != null) {
-      _from = CampusBuildings.all
-          .where((b) => b.id == widget.fromId)
-          .firstOrNull;
+      _from =
+          CampusBuildings.all.where((b) => b.id == widget.fromId).firstOrNull;
     }
     if (widget.toId != null) {
-      _to = CampusBuildings.all
-          .where((b) => b.id == widget.toId)
-          .firstOrNull;
+      _to = CampusBuildings.all.where((b) => b.id == widget.toId).firstOrNull;
     }
   }
 
@@ -66,6 +63,10 @@ class _OutdoorNavigationScreenState
 
   void _fitRoute(OsrmRoute route) {
     if (route.polyline.isEmpty) return;
+    final routeKey = '${_from?.id}->${_to?.id}';
+    if (_lastFittedRouteKey == routeKey) return;
+    _lastFittedRouteKey = routeKey;
+
     final bounds = LatLngBounds.fromPoints(route.polyline);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _mapController.fitCamera(
@@ -106,7 +107,7 @@ class _OutdoorNavigationScreenState
               children: [
                 FlutterMap(
                   mapController: _mapController,
-                  options: MapOptions(
+                  options: const MapOptions(
                     initialCenter: CampusBuildings.campusCenter,
                     initialZoom: 17,
                     minZoom: 14,
@@ -116,8 +117,7 @@ class _OutdoorNavigationScreenState
                     TileLayer(
                       urlTemplate:
                           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName:
-                          'edu.birzeit.smart_campus_app',
+                      userAgentPackageName: 'edu.birzeit.smart_campus_app',
                     ),
                     if (routeAsync?.valueOrNull != null)
                       PolylineLayer(
@@ -136,6 +136,7 @@ class _OutdoorNavigationScreenState
                             point: _from!.location,
                             width: 40,
                             height: 40,
+                            alignment: Alignment.center,
                             child: const Icon(
                               Icons.trip_origin,
                               color: AppColors.accent,
@@ -147,6 +148,7 @@ class _OutdoorNavigationScreenState
                             point: _to!.location,
                             width: 40,
                             height: 40,
+                            alignment: Alignment.topCenter,
                             child: const Icon(
                               Icons.location_on,
                               color: AppColors.accent,
@@ -213,7 +215,7 @@ class _OutdoorNavigationScreenState
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -301,8 +303,7 @@ class _RouteInfoPanel extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.directions_walk,
-                        color: AppColors.accent),
+                    const Icon(Icons.directions_walk, color: AppColors.accent),
                     const SizedBox(width: 8),
                     Text(
                       route.durationLabel,
@@ -327,8 +328,7 @@ class _RouteInfoPanel extends StatelessWidget {
                   child: ListView.separated(
                     shrinkWrap: true,
                     itemCount: route.steps.length,
-                    separatorBuilder: (_, __) =>
-                        const Divider(height: 1),
+                    separatorBuilder: (_, __) => const Divider(height: 1),
                     itemBuilder: (ctx, i) {
                       final step = route.steps[i];
                       return ListTile(
@@ -360,7 +360,7 @@ class _RouteInfoPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -379,9 +379,7 @@ class _BuildingPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = CampusBuildings.all
-        .where((b) => b.id != excludeId)
-        .toList();
+    final items = CampusBuildings.all.where((b) => b.id != excludeId).toList();
 
     return SafeArea(
       child: Padding(

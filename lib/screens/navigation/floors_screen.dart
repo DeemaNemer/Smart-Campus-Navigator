@@ -58,7 +58,7 @@ class _FloorsScreenState extends ConsumerState<FloorsScreen> {
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: CircleAvatar(
-            backgroundColor: AppColors.white.withOpacity(0.2),
+            backgroundColor: AppColors.white.withValues(alpha: 0.2),
             radius: 18,
             child: const Icon(
               Icons.park,
@@ -82,7 +82,7 @@ class _FloorsScreenState extends ConsumerState<FloorsScreen> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.15),
+              color: AppColors.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
@@ -177,9 +177,7 @@ class _FloorsScreenState extends ConsumerState<FloorsScreen> {
                   child: Text(
                     '${floor.floor}',
                     style: TextStyle(
-                      color: isSelected
-                          ? AppColors.white
-                          : AppColors.primary,
+                      color: isSelected ? AppColors.white : AppColors.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -189,9 +187,8 @@ class _FloorsScreenState extends ConsumerState<FloorsScreen> {
                   style: TextStyle(
                     fontWeight:
                         isSelected ? FontWeight.bold : FontWeight.normal,
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.textPrimary,
+                    color:
+                        isSelected ? AppColors.primary : AppColors.textPrimary,
                   ),
                 ),
                 trailing: isSelected

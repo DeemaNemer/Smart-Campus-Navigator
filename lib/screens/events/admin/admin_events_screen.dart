@@ -32,7 +32,7 @@ class AdminEventsScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-         statsAsync.when(
+          statsAsync.when(
             loading: () => const SizedBox(height: 80),
             error: (_, __) => const SizedBox(height: 80),
             data: (stats) => _buildStats(context, stats),
@@ -52,7 +52,7 @@ class AdminEventsScreen extends ConsumerWidget {
     );
   }
 
-Widget _buildStats(BuildContext context, Map<String, int> stats) {
+  Widget _buildStats(BuildContext context, Map<String, int> stats) {
     return Container(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -136,8 +136,7 @@ Widget _buildStats(BuildContext context, Map<String, int> stats) {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline,
-                size: 60, color: AppColors.error),
+            const Icon(Icons.error_outline, size: 60, color: AppColors.error),
             const SizedBox(height: 16),
             const Text('Failed to load pending events'),
             const SizedBox(height: 8),
@@ -157,6 +156,7 @@ Widget _buildStats(BuildContext context, Map<String, int> stats) {
     );
   }
 }
+
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -236,10 +236,10 @@ class _PendingEventCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.15),
+                    color: AppColors.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -254,8 +254,7 @@ class _PendingEventCard extends StatelessWidget {
               ],
             ),
             // Description
-            if (event.description != null &&
-                event.description!.isNotEmpty) ...[
+            if (event.description != null && event.description!.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
                 event.description!,
@@ -327,8 +326,8 @@ class _PendingEventCard extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-                color: AppColors.textSecondary, fontSize: 12),
+            style:
+                const TextStyle(color: AppColors.textSecondary, fontSize: 12),
             overflow: TextOverflow.ellipsis,
           ),
         ),

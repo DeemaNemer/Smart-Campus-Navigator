@@ -8,6 +8,7 @@ import '../../../services/api_service.dart';
 
 // Filter type for admin event listing
 enum AdminFilter { pending, approved, rejected }
+
 final adminFilteredEventsProvider =
     FutureProvider.family<List<Event>, AdminFilter>((ref, filter) async {
   final auth = ref.watch(authProvider);
@@ -92,8 +93,7 @@ class FilteredEventsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               'No ${filter.name} events',
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -121,8 +121,7 @@ class FilteredEventsScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline,
-                size: 60, color: AppColors.error),
+            const Icon(Icons.error_outline, size: 60, color: AppColors.error),
             const SizedBox(height: 16),
             const Text('Failed to load events'),
             const SizedBox(height: 8),
@@ -173,10 +172,10 @@ class _AdminEventCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.15),
+                      color: color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
@@ -197,10 +196,10 @@ class _AdminEventCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -218,8 +217,8 @@ class _AdminEventCard extends StatelessWidget {
               // Title
               Text(
                 event.title,
-                style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

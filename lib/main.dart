@@ -15,7 +15,7 @@ class SmartCampusApp extends StatelessWidget {
   const SmartCampusApp({super.key});
 
   @override
-  Widget build(BuildContext context) { 
+  Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Smart Campus Navigator',
       debugShowCheckedModeBanner: false,

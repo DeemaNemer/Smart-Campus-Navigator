@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../config/app_constants.dart';
 import '../models/room.dart';
 import '../models/professor.dart';
@@ -17,8 +18,8 @@ class ApiService {
     _dio = Dio(
       BaseOptions(
         baseUrl: AppConstants.baseUrl,
-        connectTimeout: Duration(seconds: AppConstants.connectTimeout),
-        receiveTimeout: Duration(seconds: AppConstants.receiveTimeout),
+        connectTimeout: const Duration(seconds: AppConstants.connectTimeout),
+        receiveTimeout: const Duration(seconds: AppConstants.receiveTimeout),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -30,7 +31,7 @@ class ApiService {
       LogInterceptor(
         requestBody: true,
         responseBody: true,
-        logPrint: (obj) => print('[API] $obj'),
+        logPrint: (obj) => debugPrint('[API] $obj'),
       ),
     );
   }
@@ -47,7 +48,7 @@ class ApiService {
       final response = await _dio.get('/');
       return response.statusCode == 200;
     } catch (e) {
-      print('[API] Ping failed: $e');
+      debugPrint('[API] Ping failed: $e');
       return false;
     }
   }
@@ -140,7 +141,7 @@ class ApiService {
     }
   }
 
- // ============================================
+  // ============================================
   // Get all approved events (public)
   // Optionally filter by target audience
   // ============================================
@@ -167,8 +168,8 @@ class ApiService {
     required String token,
     required String title,
     String? description,
-    required String date,        // YYYY-MM-DD
-    required String time,        // HH:MM
+    required String date, // YYYY-MM-DD
+    required String time, // HH:MM
     required int locationRoomId,
     required String targetAudience, // students/employees/all
     String? posterUrl,
@@ -244,6 +245,7 @@ class ApiService {
       throw _handleEventError(e);
     }
   }
+
 // ============================================
   // Admin: Get events by status
   // status: pending | approved | rejected
@@ -264,6 +266,7 @@ class ApiService {
       throw _handleEventError(e);
     }
   }
+
   // ============================================
   // Admin: Approve event
   // ============================================
@@ -329,7 +332,6 @@ class ApiService {
     return _handleError(e);
   }
 
-
 // ============================================
   // Calculate navigation path
   // POST /navigate with body:
@@ -381,6 +383,7 @@ class ApiService {
       throw _handleError(e);
     }
   }
+
   // ============================================
   // Helper: extract list from response
   // Handles both: a raw list, or { "key": [...] } wrapper

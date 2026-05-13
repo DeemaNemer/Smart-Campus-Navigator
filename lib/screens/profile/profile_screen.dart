@@ -59,8 +59,8 @@ class ProfileScreen extends ConsumerWidget {
     return Container(
       width: 100,
       height: 100,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [AppColors.primary, AppColors.primaryDark],
         ),
         shape: BoxShape.circle,
@@ -82,7 +82,7 @@ class ProfileScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.15),
+        color: AppColors.primary.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
@@ -133,7 +133,7 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
- Widget _buildMenuCard(BuildContext context, WidgetRef ref) {
+  Widget _buildMenuCard(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).user;
     final canCreateEvents = user?.canCreateEvents ?? false;
     final isAdmin = user?.isAdmin ?? false;
@@ -168,8 +168,7 @@ class ProfileScreen extends ConsumerWidget {
             'Privacy Policy',
             () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Privacy Policy - Coming soon')),
+                const SnackBar(content: Text('Privacy Policy - Coming soon')),
               );
             },
           ),

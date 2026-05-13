@@ -5,9 +5,9 @@ import '../services/api_service.dart';
 
 // State for navigation
 class NavigationState {
-  final Room? userLocation;     // المستخدم اختارها كـ "أنا هنا"
-  final Room? destination;       // الوجهة
-  final NavigationPath? path;    // المسار المحسوب
+  final Room? userLocation; // المستخدم اختارها كـ "أنا هنا"
+  final Room? destination; // الوجهة
+  final NavigationPath? path; // المسار المحسوب
   final bool isCalculating;
   final String? error;
 
@@ -30,7 +30,8 @@ class NavigationState {
     bool clearUserLocation = false,
   }) {
     return NavigationState(
-      userLocation: clearUserLocation ? null : (userLocation ?? this.userLocation),
+      userLocation:
+          clearUserLocation ? null : (userLocation ?? this.userLocation),
       destination: destination ?? this.destination,
       path: clearPath ? null : (path ?? this.path),
       isCalculating: isCalculating ?? this.isCalculating,
@@ -65,10 +66,11 @@ class NavigationNotifier extends StateNotifier<NavigationState> {
   Future<void> calculatePath() async {
     if (!state.isReady) return;
 
-    state = state.copyWith(isCalculating: true, clearError: true, clearPath: true);
+    state =
+        state.copyWith(isCalculating: true, clearError: true, clearPath: true);
 
     try {
-     final path = await _api.navigate(
+      final path = await _api.navigate(
         userX: state.userLocation!.x,
         userY: state.userLocation!.y,
         userFloor: state.userLocation!.floor,

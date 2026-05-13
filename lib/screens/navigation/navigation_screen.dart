@@ -79,11 +79,11 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.15),
+              color: AppColors.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.business,
-                color: AppColors.primary, size: 20),
+            child:
+                const Icon(Icons.business, color: AppColors.primary, size: 20),
           ),
           const SizedBox(width: 10),
           const Text(
@@ -99,8 +99,7 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
           GestureDetector(
             onTap: _showFloorPicker,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: AppColors.cardBg,
                 borderRadius: BorderRadius.circular(20),
@@ -187,14 +186,12 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
               onPressed: navState.isCalculating || !navState.isReady
                   ? null
                   : () {
-                      ref
-                          .read(navigationProvider.notifier)
-                          .calculatePath();
+                      ref.read(navigationProvider.notifier).calculatePath();
                     },
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 disabledBackgroundColor:
-                    AppColors.accent.withOpacity(0.4),
+                    AppColors.accent.withValues(alpha: 0.4),
               ),
               child: navState.isCalculating
                   ? const SizedBox(
@@ -222,7 +219,7 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -233,8 +230,8 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
                   Expanded(
                     child: Text(
                       navState.error!,
-                      style: const TextStyle(
-                          color: AppColors.error, fontSize: 12),
+                      style:
+                          const TextStyle(color: AppColors.error, fontSize: 12),
                     ),
                   ),
                 ],
@@ -300,9 +297,7 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
                   child: Text(
                     '${floor.floor}',
                     style: TextStyle(
-                      color: isSelected
-                          ? AppColors.white
-                          : AppColors.primary,
+                      color: isSelected ? AppColors.white : AppColors.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -402,9 +397,8 @@ class _LocationCard extends StatelessWidget {
                             : AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
-                        fontStyle: isPlaceholder
-                            ? FontStyle.italic
-                            : FontStyle.normal,
+                        fontStyle:
+                            isPlaceholder ? FontStyle.italic : FontStyle.normal,
                       ),
                     ),
                   ),
@@ -515,23 +509,18 @@ class _LocationPickerSheetState extends ConsumerState<_LocationPickerSheet> {
               final floor = FloorConfigs.all[i];
               final isSelected = floor.floor == _selectedFloor;
               return GestureDetector(
-                onTap: () =>
-                    setState(() => _selectedFloor = floor.floor),
+                onTap: () => setState(() => _selectedFloor = floor.floor),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.cardBg,
+                    color: isSelected ? AppColors.primary : AppColors.cardBg,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     'Floor ${floor.floor}',
                     style: TextStyle(
-                      color: isSelected
-                          ? AppColors.white
-                          : AppColors.primary,
+                      color: isSelected ? AppColors.white : AppColors.primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
@@ -561,8 +550,7 @@ class _LocationPickerSheetState extends ConsumerState<_LocationPickerSheet> {
                 final room = rooms[i];
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundColor:
-                        AppColors.primary.withOpacity(0.15),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.15),
                     child: Icon(
                       _getIconForType(room.type),
                       color: AppColors.primary,

@@ -15,8 +15,8 @@ class AppColors {
   // ============================================
   // Backgrounds - matching the prototype's pink/peach tone
   // ============================================
-  static const Color background = Color.fromRGBO(249, 252, 227, 0.898); 
-  static const Color cardBg = Color(0xFFEFF5E9);       
+  static const Color background = Color.fromRGBO(249, 252, 227, 0.898);
+  static const Color cardBg = Color(0xFFEFF5E9);
   static const Color white = Colors.white;
 
   // Text

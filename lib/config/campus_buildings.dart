@@ -1,63 +1,268 @@
 import 'package:latlong2/latlong.dart';
 import '../models/campus_building.dart';
 
-/// Approximate coordinates of Birzeit University buildings.
-/// IMPORTANT: These are approximate. Refine each one by:
-/// 1. Going to https://www.openstreetmap.org
-/// 2. Searching "Birzeit University"
-/// 3. Right-clicking on the actual building location
-/// 4. Choosing "Show address" to copy the lat/lng
+/// Birzeit University outdoor navigation points.
+///
+/// [location] is the building/map marker point. [routingLocation] is the
+/// nearest entrance or footway point used for route calculation.
 class CampusBuildings {
-  static const LatLng campusCenter = LatLng(31.9617, 35.1846);
+  static const LatLng campusCenter = LatLng(31.9603, 35.1830);
 
   static const List<CampusBuilding> all = [
     CampusBuilding(
       id: 'masri',
       nameEn: 'Masri Building (IT)',
       nameAr: 'مبنى المصري (تكنولوجيا المعلومات)',
-      location: LatLng(31.9617, 35.1843),
+      location: LatLng(31.9613815, 35.1846141),
+      routingLocation: LatLng(31.9613921, 35.1843414),
       description: 'Information Technology Faculty',
     ),
     CampusBuilding(
       id: 'bamieh',
       nameEn: 'Bamieh Building (Education)',
       nameAr: 'مبنى البامية (كلية التربية)',
-      location: LatLng(31.9608, 35.1850),
+      location: LatLng(31.9604967, 35.1837157),
+      routingLocation: LatLng(31.9605679, 35.1835705),
       description: 'Education Faculty',
     ),
     CampusBuilding(
       id: 'aggad',
-      nameEn: 'Aggad Building',
-      nameAr: 'مبنى العقاد',
-      location: LatLng(31.9615, 35.1838),
+      nameEn: 'Al-Juraysi / Business and Economics Building',
+      nameAr: 'مبنى عبد الرحمن الجريسي / مبنى الأعمال والاقتصاد',
+      location: LatLng(31.9582132, 35.1831402),
+      routingLocation: LatLng(31.9584708, 35.1831414),
       description: 'Business and Economics',
+    ),
+    CampusBuilding(
+      id: 'omar_abdulhadi',
+      nameEn: 'Omar Abdulhadi Business and Economics Building 2',
+      nameAr: 'مبنى عمر عبد الهادي / مبنى الأعمال والاقتصاد 2',
+      location: LatLng(31.9582251, 35.1837130),
+      routingLocation: LatLng(31.9582198, 35.1838317),
+      description: 'Business and Economics 2',
+    ),
+    CampusBuilding(
+      id: 'science',
+      nameEn: 'Faculty of Science Building',
+      nameAr: 'مبنى كلية العلوم',
+      location: LatLng(31.9581823, 35.1812175),
+      routingLocation: LatLng(31.9584887, 35.1812609),
+      description: 'Science Faculty',
+    ),
+    CampusBuilding(
+      id: 'science_math',
+      nameEn: 'Samir Abdulhadi Science Building - Math Wing',
+      nameAr: 'مبنى سمير عبد الهادي / كلية العلوم - جناح الرياضيات',
+      location: LatLng(31.9580989, 35.1808571),
+      routingLocation: LatLng(31.9585223, 35.1808323),
+      description: 'Science Building - Math Wing',
+    ),
+    CampusBuilding(
+      id: 'library',
+      nameEn: 'Yusuf Ahmed Alghanim Library',
+      nameAr: 'مكتبة يوسف أحمد الغانم',
+      location: LatLng(31.9587630, 35.1825519),
+      routingLocation: LatLng(31.9585585, 35.1823888),
+      description: 'Main Library',
+    ),
+    CampusBuilding(
+      id: 'administration',
+      nameEn: 'Administration Building',
+      nameAr: 'مبنى الإدارة',
+      location: LatLng(31.9590071, 35.1815127),
+      routingLocation: LatLng(31.9590444, 35.1811628),
+      description: 'Administration',
+    ),
+    CampusBuilding(
+      id: 'law',
+      nameEn: 'Law Building',
+      nameAr: 'مبنى الحقوق',
+      location: LatLng(31.9594120, 35.1823397),
+      routingLocation: LatLng(31.9595484, 35.1821141),
+      description: 'Law Faculty',
     ),
     CampusBuilding(
       id: 'kamal_nasser',
       nameEn: 'Kamal Nasser Hall',
       nameAr: 'قاعة كمال ناصر',
-      location: LatLng(31.9622, 35.1844),
+      location: LatLng(31.9587840, 35.1818832),
+      routingLocation: LatLng(31.9591979, 35.1823297),
     ),
     CampusBuilding(
-      id: 'library',
-      nameEn: 'Main Library',
-      nameAr: 'المكتبة الرئيسية',
-      location: LatLng(31.9614, 35.1841),
+      id: 'clinic',
+      nameEn: 'Azeez Shaheen Building / University Clinic',
+      nameAr: 'عيادة الجامعة',
+      location: LatLng(31.9583359, 35.1819640),
+      routingLocation: LatLng(31.9584740, 35.1820054),
+      description: 'University Clinic',
+    ),
+    CampusBuilding(
+      id: 'naseeb_shaheen',
+      nameEn: 'Naseeb Shaheen Graduate Studies Building',
+      nameAr: 'مبنى نسيب شاهين / مبنى الدراسات العليا',
+      location: LatLng(31.9582582, 35.1825149),
+      routingLocation: LatLng(31.9583746, 35.1825483),
+      description: 'Graduate Studies',
+    ),
+    CampusBuilding(
+      id: 'maktoum',
+      nameEn: 'Student Complex / Maktoum Building',
+      nameAr: 'مبنى الشيخ راشد بن سعيد آل مكتوم / مجمع الطلبة',
+      location: LatLng(31.9597347, 35.1817238),
+      routingLocation: LatLng(31.9597719, 35.1814241),
+      description: 'Student Complex',
+    ),
+    CampusBuilding(
+      id: 'main_cafeteria',
+      nameEn: 'Main Cafeteria',
+      nameAr: 'الكفتيريا المركزية',
+      location: LatLng(31.9596776, 35.1817292),
+      routingLocation: LatLng(31.9599792, 35.1818396),
+      description: 'Main Cafeteria',
+    ),
+    CampusBuilding(
+      id: 'azeez_shaheen_arts',
+      nameEn: 'Azeez Shaheen Arts Building',
+      nameAr: 'مبنى عزيز شاهين / مبنى الآداب',
+      location: LatLng(31.9606845, 35.1826787),
+      routingLocation: LatLng(31.9608154, 35.1825485),
+      description: 'Arts Faculty',
+    ),
+    CampusBuilding(
+      id: 'services',
+      nameEn: 'Services Building',
+      nameAr: 'مبنى الخدمات',
+      location: LatLng(31.9601717, 35.1823806),
+      routingLocation: LatLng(31.9599984, 35.1823931),
+      description: 'Services Building',
+    ),
+    CampusBuilding(
+      id: 'alsadik',
+      nameEn: 'Al-Sadik Building',
+      nameAr: 'مبنى الصادق',
+      location: LatLng(31.9600904, 35.1831068),
+      routingLocation: LatLng(31.9602035, 35.1829874),
+    ),
+    CampusBuilding(
+      id: 'kattan',
+      nameEn: 'Waleed and Helen Kattan Building',
+      nameAr: 'مبنى وليد وهيلن قطان',
+      location: LatLng(31.9592871, 35.1831451),
+      routingLocation: LatLng(31.9586400, 35.1833912),
+    ),
+    CampusBuilding(
+      id: 'bahrain',
+      nameEn: 'Kingdom of Bahrain Building for Women Studies',
+      nameAr: 'مبنى مملكة البحرين للدراسات المرأة',
+      location: LatLng(31.9610154, 35.1830233),
+      routingLocation: LatLng(31.9612046, 35.1828980),
+      description: 'Women Studies',
+    ),
+    CampusBuilding(
+      id: 'khoury',
+      nameEn: 'Said Khoury Building for Development Studies',
+      nameAr: 'مبنى سعيد خوري لدراسات التنمية',
+      location: LatLng(31.9610619, 35.1835790),
+      routingLocation: LatLng(31.9612001, 35.1834140),
+      description: 'Development Studies',
     ),
     CampusBuilding(
       id: 'najjad_zani',
       nameEn: 'Najjad Zani Center',
       nameAr: 'مركز نجاد زعني',
-      location: LatLng(31.9611, 35.1840),
+      location: LatLng(31.9609886, 35.1842697),
+      routingLocation: LatLng(31.9610677, 35.1842073),
     ),
     CampusBuilding(
       id: 'masrouji_media',
       nameEn: 'Mohammad Masrouji Media Building',
-      nameAr: 'مبنى محمد مصروجي للإعلام',
-      location: LatLng(31.9619, 35.1837),
+      nameAr: 'مبنى محمد المسروجي للإعلام',
+      location: LatLng(31.9614693, 35.1835806),
+      routingLocation: LatLng(31.9615816, 35.1834596),
+    ),
+    CampusBuilding(
+      id: 'shuky_shaheen',
+      nameEn: 'Shuky Azeez Shaheen University Halls Building',
+      nameAr: 'مبنى شوقي عزيز شاهين / قاعات الجامعة العامة',
+      location: LatLng(31.9615214, 35.1823059),
+      routingLocation: LatLng(31.9616462, 35.1824186),
+      description: 'University Halls',
+    ),
+    CampusBuilding(
+      id: 'aweidah',
+      nameEn: 'Samir Aweidah Art, Music and Design Building',
+      nameAr: 'مبنى سمير عويضة / الفنون والموسيقى والتصميم',
+      location: LatLng(31.9622019, 35.1819814),
+      routingLocation: LatLng(31.9622019, 35.1819814),
+      description: 'Art, Music and Design',
+    ),
+    CampusBuilding(
+      id: 'darwazah',
+      nameEn: 'Samih Darwazah Pharmaceutical Industries Institute',
+      nameAr: 'معهد سميح دروزة للصناعات الدوائية',
+      location: LatLng(31.9624377, 35.1824127),
+      routingLocation: LatLng(31.9624377, 35.1824127),
+    ),
+    CampusBuilding(
+      id: 'pnh',
+      nameEn: 'Ghaleb Younis Pharmacy, Nursing and Health Professions Building',
+      nameAr: 'مبنى غالب يونس / الصيدلة والتمريض والمهن الصحية',
+      location: LatLng(31.9621557, 35.1830124),
+      routingLocation: LatLng(31.9619167, 35.1837210),
+      description: 'Pharmacy, Nursing and Health Professions',
+    ),
+    CampusBuilding(
+      id: 'naseeb_shaheen_auditorium',
+      nameEn: 'Naseeb Azeez Shaheen Auditorium',
+      nameAr: 'مسرح نسيب عزيز شاهين',
+      location: LatLng(31.9621123, 35.1838920),
+      routingLocation: LatLng(31.9619167, 35.1837210),
+      description: 'Auditorium',
+    ),
+    CampusBuilding(
+      id: 'healthy_cafeteria',
+      nameEn: 'Healthy Cafeteria',
+      nameAr: 'الكفتيريا الصحية',
+      location: LatLng(31.9620976, 35.1826978),
+      routingLocation: LatLng(31.9620976, 35.1826978),
+    ),
+    CampusBuilding(
+      id: 'gymnasium',
+      nameEn: 'Bamieh and Kayyali Physical Education Building',
+      nameAr: 'مبنى محمد بامية ووليد كيالي / التربية الرياضية',
+      location: LatLng(31.9611726, 35.1816946),
+      routingLocation: LatLng(31.9612394, 35.1821604),
+      description: 'Physical Education',
+    ),
+    CampusBuilding(
+      id: 'stadium',
+      nameEn: 'Ali El-Haj Stadium',
+      nameAr: 'مدرج علي الحاج',
+      location: LatLng(31.9606497, 35.1810447),
+      routingLocation: LatLng(31.9608905, 35.1807368),
+    ),
+    CampusBuilding(
+      id: 'riyadh_dorms',
+      nameEn: 'Riyadh Housing / Female Dorms',
+      nameAr: 'إسكان الرياض للطالبات',
+      location: LatLng(31.9607856, 35.1855782),
+      routingLocation: LatLng(31.9607856, 35.1855782),
+    ),
+    CampusBuilding(
+      id: 'university_museum',
+      nameEn: 'Birzeit University Museum',
+      nameAr: 'متحف جامعة بيرزيت',
+      location: LatLng(31.9587265, 35.1829571),
+      routingLocation: LatLng(31.9586031, 35.1829935),
+    ),
+    CampusBuilding(
+      id: 'palestinian_museum',
+      nameEn: 'The Palestinian Museum',
+      nameAr: 'المتحف الفلسطيني',
+      location: LatLng(31.9630190, 35.1833845),
+      routingLocation: LatLng(31.9630190, 35.1833845),
     ),
   ];
 
-  static CampusBuilding byId(String id) =>
-      all.firstWhere((b) => b.id == id);
+  static CampusBuilding byId(String id) => all.firstWhere((b) => b.id == id);
 }

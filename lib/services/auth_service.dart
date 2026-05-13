@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../config/app_constants.dart';
 import '../models/app_user.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+
 class AuthResult {
   final String accessToken;
   final AppUser user;
@@ -26,8 +28,8 @@ class AuthService {
     _dio = Dio(
       BaseOptions(
         baseUrl: AppConstants.baseUrl,
-        connectTimeout: Duration(seconds: AppConstants.connectTimeout),
-        receiveTimeout: Duration(seconds: AppConstants.receiveTimeout),
+        connectTimeout: const Duration(seconds: AppConstants.connectTimeout),
+        receiveTimeout: const Duration(seconds: AppConstants.receiveTimeout),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -39,7 +41,7 @@ class AuthService {
       LogInterceptor(
         requestBody: true,
         responseBody: true,
-        logPrint: (obj) => print('[AUTH] $obj'),
+        logPrint: (obj) => debugPrint('[AUTH] $obj'),
       ),
     );
   }
@@ -192,6 +194,7 @@ class AuthService {
       throw _handleAuthError(e);
     }
   }
+
   // ============================================
   // Google Sign-In
   // ============================================
@@ -269,7 +272,7 @@ class AuthService {
     }
   }
 
-Future<void> clearSession() async {
+  Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(AppConstants.tokenKey);
     await prefs.remove(AppConstants.userKey);

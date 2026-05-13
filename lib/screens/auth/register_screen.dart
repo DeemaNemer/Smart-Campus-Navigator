@@ -183,7 +183,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.primary.withOpacity(0.15)
+                ? AppColors.primary.withValues(alpha: 0.15)
                 : AppColors.cardBg,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
@@ -204,7 +204,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                  color:
+                      isSelected ? AppColors.primary : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -340,9 +341,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(0.1),
+        color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.error.withOpacity(0.3)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

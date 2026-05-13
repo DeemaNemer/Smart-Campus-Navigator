@@ -32,8 +32,7 @@ class MyEventsScreen extends ConsumerWidget {
         icon: const Icon(Icons.add, color: AppColors.white),
         label: const Text(
           'New Event',
-          style:
-              TextStyle(color: AppColors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold),
         ),
       ),
       body: eventsAsync.when(
@@ -81,8 +80,7 @@ class MyEventsScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
         itemCount: events.length,
         separatorBuilder: (_, __) => const SizedBox(height: 12),
-        itemBuilder: (context, i) =>
-            _MyEventCard(event: events[i], ref: ref),
+        itemBuilder: (context, i) => _MyEventCard(event: events[i], ref: ref),
       ),
     );
   }
@@ -94,8 +92,7 @@ class MyEventsScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline,
-                size: 60, color: AppColors.error),
+            const Icon(Icons.error_outline, size: 60, color: AppColors.error),
             const SizedBox(height: 16),
             const Text('Failed to load events'),
             const SizedBox(height: 8),
@@ -188,15 +185,14 @@ class _MyEventCard extends StatelessWidget {
                 ],
               ),
               // Admin notes (if rejected)
-              if (event.adminNotes != null &&
-                  event.adminNotes!.isNotEmpty) ...[
+              if (event.adminNotes != null && event.adminNotes!.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: event.status == EventStatus.rejected
-                        ? AppColors.error.withOpacity(0.08)
-                        : AppColors.primary.withOpacity(0.08),
+                        ? AppColors.error.withValues(alpha: 0.08)
+                        : AppColors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -264,7 +260,7 @@ class _MyEventCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

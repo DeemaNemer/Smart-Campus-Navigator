@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/events_provider.dart';
 import '../../services/api_service.dart';
+
 class EventDetailsScreen extends ConsumerWidget {
   final Event event;
 
@@ -57,6 +58,10 @@ class EventDetailsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildStatusBadge(),
+                  if (!_isUpcoming) ...[
+                    const SizedBox(height: 16),
+                    _buildPastEventNote(),
+                  ],
                   const SizedBox(height: 16),
                   _buildInfoCard(),
                   if (event.description != null &&
@@ -69,12 +74,12 @@ class EventDetailsScreen extends ConsumerWidget {
                     _buildLocationCard(),
                   ],
                   const SizedBox(height: 32),
-            // Show admin actions if user is admin AND event is pending
-             if (_shouldShowAdminActions(ref))
-              _buildAdminActions(context, ref),
-                if (_shouldShowAdminActions(ref)) const SizedBox(height: 16),
-            if (event.roomNumber != null) _buildNavigateButton(context),
-            const SizedBox(height: 20),
+                  // Show admin actions if user is admin AND event is pending
+                  if (_shouldShowAdminActions(ref))
+                    _buildAdminActions(context, ref),
+                  if (_shouldShowAdminActions(ref)) const SizedBox(height: 16),
+                  if (event.roomNumber != null) _buildNavigateButton(context),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -118,7 +123,7 @@ class EventDetailsScreen extends ConsumerWidget {
               end: Alignment.bottomCenter,
               colors: [
                 Colors.transparent,
-                Colors.black.withOpacity(0.6),
+                Colors.black.withValues(alpha: 0.6),
               ],
             ),
           ),
@@ -158,7 +163,7 @@ class EventDetailsScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.event, size: 60, color: AppColors.white),
@@ -189,8 +194,8 @@ class EventDetailsScreen extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: _isUpcoming
-            ? AppColors.success.withOpacity(0.15)
-            : AppColors.textLight.withOpacity(0.15),
+            ? AppColors.success.withValues(alpha: 0.15)
+            : AppColors.textLight.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -325,7 +330,7 @@ class EventDetailsScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _InfoRow(
+          const _InfoRow(
             icon: Icons.business_outlined,
             label: 'Building',
             value: 'IT Building',
@@ -350,6 +355,7 @@ class EventDetailsScreen extends ConsumerWidget {
       ),
     );
   }
+
   bool _shouldShowAdminActions(WidgetRef ref) {
     final user = ref.read(authProvider).user;
     if (user == null || !user.isAdmin) return false;
@@ -360,9 +366,9 @@ class EventDetailsScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.warning.withOpacity(0.1),
+        color: AppColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -373,8 +379,7 @@ class EventDetailsScreen extends ConsumerWidget {
               SizedBox(width: 8),
               Text(
                 'Admin Actions',
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ],
           ),
@@ -584,7 +589,7 @@ class EventDetailsScreen extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.textLight.withOpacity(0.1),
+        color: AppColors.textLight.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
       ),

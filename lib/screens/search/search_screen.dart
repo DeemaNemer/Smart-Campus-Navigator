@@ -185,8 +185,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline,
-                size: 80, color: AppColors.error),
+            const Icon(Icons.error_outline, size: 80, color: AppColors.error),
             const SizedBox(height: 16),
             const Text(
               'Something went wrong',
@@ -201,9 +200,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                ref
-                    .read(searchProvider.notifier)
-                    .search(_controller.text);
+                ref.read(searchProvider.notifier).search(_controller.text);
               },
               child: const Text('Retry'),
             ),
@@ -233,13 +230,13 @@ class _ResultCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-       onTap: () {
+        onTap: () {
           if (result.type == SearchResultType.room) {
             context.push('/room', extra: result.room);
-            } else {
+          } else {
             context.push('/professor', extra: result.professor);
-               }
-                  },
+          }
+        },
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -247,7 +244,7 @@ class _ResultCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.15),
+                  color: iconColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: iconColor, size: 28),

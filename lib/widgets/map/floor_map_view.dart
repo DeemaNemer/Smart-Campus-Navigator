@@ -91,13 +91,9 @@ class _MapWithOverlay extends StatelessWidget {
     final mapLeft = width * floorConfig.paddingLeftRatio;
     final mapTop = height * floorConfig.paddingTopRatio;
     final mapWidth = width *
-        (1.0 -
-            floorConfig.paddingLeftRatio -
-            floorConfig.paddingRightRatio);
+        (1.0 - floorConfig.paddingLeftRatio - floorConfig.paddingRightRatio);
     final mapHeight = height *
-        (1.0 -
-            floorConfig.paddingTopRatio -
-            floorConfig.paddingBottomRatio);
+        (1.0 - floorConfig.paddingTopRatio - floorConfig.paddingBottomRatio);
 
     final dataWidth = floorConfig.maxX - floorConfig.minX;
     final dataHeight = floorConfig.maxY - floorConfig.minY;
@@ -113,10 +109,8 @@ class _MapWithOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Filter path to only points on the current floor
-    final pointsOnThisFloor = pathPoints
-            ?.where((p) => p.floor == floorConfig.floor)
-            .toList() ??
-        [];
+    final pointsOnThisFloor =
+        pathPoints?.where((p) => p.floor == floorConfig.floor).toList() ?? [];
 
     return Stack(
       children: [
@@ -125,8 +119,7 @@ class _MapWithOverlay extends StatelessWidget {
           child: Image.asset(
             floorConfig.imagePath,
             fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) =>
-                _buildPlaceholder(),
+            errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
           ),
         ),
 
@@ -155,7 +148,7 @@ class _MapWithOverlay extends StatelessWidget {
       width: 300,
       height: 400,
       decoration: BoxDecoration(
-        color: AppColors.cardBg.withOpacity(0.5),
+        color: AppColors.cardBg.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Center(
@@ -201,7 +194,7 @@ class _MapWithOverlay extends StatelessWidget {
           border: Border.all(color: AppColors.white, width: 3),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accent.withOpacity(0.5),
+              color: AppColors.accent.withValues(alpha: 0.5),
               blurRadius: 8,
               spreadRadius: 2,
             ),
@@ -225,7 +218,7 @@ class _MapWithOverlay extends StatelessWidget {
         size: size,
         shadows: [
           Shadow(
-            color: AppColors.accent.withOpacity(0.5),
+            color: AppColors.accent.withValues(alpha: 0.5),
             blurRadius: 8,
           ),
         ],

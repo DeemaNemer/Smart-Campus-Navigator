@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../config/app_colors.dart';
 import '../../models/room.dart';
 import 'package:go_router/go_router.dart';
+
 class RoomDetailsScreen extends StatelessWidget {
   final Room room;
 
@@ -68,7 +69,7 @@ class RoomDetailsScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -103,7 +104,7 @@ class RoomDetailsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -158,7 +159,7 @@ class RoomDetailsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -167,15 +168,15 @@ class RoomDetailsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.location_on_outlined,
                 color: AppColors.primary,
                 size: 22,
               ),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 'Location',
                 style: TextStyle(
                   fontSize: 16,
@@ -185,13 +186,14 @@ class RoomDetailsScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _DetailRow(label: 'Building', value: 'IT Building'),
+          const _DetailRow(label: 'Building', value: 'IT Building'),
           const SizedBox(height: 8),
           _DetailRow(label: 'Floor', value: room.floor.toString()),
           const SizedBox(height: 8),
           _DetailRow(
             label: 'Coordinates',
-            value: '(${room.x.toStringAsFixed(1)}, ${room.y.toStringAsFixed(1)})',
+            value:
+                '(${room.x.toStringAsFixed(1)}, ${room.y.toStringAsFixed(1)})',
           ),
         ],
       ),
@@ -209,8 +211,8 @@ class RoomDetailsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: const [
+          const Row(
+            children: [
               Icon(Icons.info_outline, color: AppColors.primary, size: 22),
               SizedBox(width: 8),
               Text(
@@ -240,7 +242,7 @@ class RoomDetailsScreen extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-       onPressed: () => context.push('/navigate', extra: room),
+        onPressed: () => context.push('/navigate', extra: room),
         icon: const Icon(Icons.navigation),
         label: const Text(
           'Get Directions',

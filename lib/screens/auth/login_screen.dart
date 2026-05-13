@@ -38,6 +38,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context.go('/home');
     }
   }
+
   Future<void> _handleGoogleLogin() async {
     final success = await ref.read(authProvider.notifier).signInWithGoogle();
 
@@ -47,6 +48,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context.go('/home');
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -96,7 +98,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.15),
+            color: AppColors.primary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -189,9 +191,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(0.1),
+        color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.error.withOpacity(0.3)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -234,11 +236,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildDivider() {
-    return Row(
+    return const Row(
       children: [
-        const Expanded(child: Divider(color: AppColors.border)),
+        Expanded(child: Divider(color: AppColors.border)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             'OR',
             style: TextStyle(
@@ -248,11 +250,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ),
-        const Expanded(child: Divider(color: AppColors.border)),
+        Expanded(child: Divider(color: AppColors.border)),
       ],
     );
   }
-Widget _buildGoogleButton() {
+
+  Widget _buildGoogleButton() {
     return OutlinedButton.icon(
       onPressed: _handleGoogleLogin,
       icon: Container(
@@ -289,6 +292,7 @@ Widget _buildGoogleButton() {
       ),
     );
   }
+
   Widget _buildGuestButton() {
     return OutlinedButton.icon(
       onPressed: () {

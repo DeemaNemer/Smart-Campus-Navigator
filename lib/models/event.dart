@@ -3,10 +3,14 @@ enum EventStatus { pending, approved, rejected, unknown }
 
 EventStatus parseEventStatus(String? value) {
   switch (value) {
-    case 'pending': return EventStatus.pending;
-    case 'approved': return EventStatus.approved;
-    case 'rejected': return EventStatus.rejected;
-    default: return EventStatus.unknown;
+    case 'pending':
+      return EventStatus.pending;
+    case 'approved':
+      return EventStatus.approved;
+    case 'rejected':
+      return EventStatus.rejected;
+    default:
+      return EventStatus.unknown;
   }
 }
 
@@ -15,9 +19,12 @@ enum EventAudience { students, employees, all }
 
 EventAudience parseAudience(String? value) {
   switch (value) {
-    case 'students': return EventAudience.students;
-    case 'employees': return EventAudience.employees;
-    default: return EventAudience.all;
+    case 'students':
+      return EventAudience.students;
+    case 'employees':
+      return EventAudience.employees;
+    default:
+      return EventAudience.all;
   }
 }
 
@@ -110,18 +117,25 @@ class Event {
 
   String get statusLabel {
     switch (status) {
-      case EventStatus.pending: return 'Pending';
-      case EventStatus.approved: return 'Approved';
-      case EventStatus.rejected: return 'Rejected';
-      case EventStatus.unknown: return 'Unknown';
+      case EventStatus.pending:
+        return 'Pending';
+      case EventStatus.approved:
+        return 'Approved';
+      case EventStatus.rejected:
+        return 'Rejected';
+      case EventStatus.unknown:
+        return 'Unknown';
     }
   }
 
   String get audienceLabel {
     switch (targetAudience) {
-      case EventAudience.students: return 'Students';
-      case EventAudience.employees: return 'Employees';
-      case EventAudience.all: return 'Everyone';
+      case EventAudience.students:
+        return 'Students';
+      case EventAudience.employees:
+        return 'Employees';
+      case EventAudience.all:
+        return 'Everyone';
     }
   }
 }

@@ -3,6 +3,7 @@ import '../../config/app_colors.dart';
 import '../../models/professor.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/room.dart';
+
 class ProfessorDetailsScreen extends StatelessWidget {
   final Professor professor;
 
@@ -69,7 +70,7 @@ class ProfessorDetailsScreen extends StatelessWidget {
                 // Avatar circle
                 CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
                   child: Text(
                     _getInitials(professor.displayName),
                     style: const TextStyle(
@@ -93,7 +94,7 @@ class ProfessorDetailsScreen extends StatelessWidget {
                   Text(
                     professor.department!,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 14,
                     ),
                   ),
@@ -108,8 +109,8 @@ class ProfessorDetailsScreen extends StatelessWidget {
 
   // ===== Contact info card =====
   Widget _buildContactCard() {
-    final hasArabicName = professor.nameAr.isNotEmpty &&
-        professor.nameAr != professor.nameEn;
+    final hasArabicName =
+        professor.nameAr.isNotEmpty && professor.nameAr != professor.nameEn;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -118,7 +119,7 @@ class ProfessorDetailsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -164,7 +165,7 @@ class ProfessorDetailsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -173,8 +174,8 @@ class ProfessorDetailsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: const [
+          const Row(
+            children: [
               Icon(Icons.location_on_outlined,
                   color: AppColors.accent, size: 22),
               SizedBox(width: 8),
@@ -192,7 +193,7 @@ class ProfessorDetailsScreen extends StatelessWidget {
             value: professor.floor?.toString() ?? '-',
           ),
           const SizedBox(height: 8),
-          _DetailRow(label: 'Building', value: 'IT Building'),
+          const _DetailRow(label: 'Building', value: 'IT Building'),
         ],
       ),
     );
@@ -241,7 +242,7 @@ class ProfessorDetailsScreen extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-       onPressed: () {
+        onPressed: () {
           // Build a temporary Room representing the professor's office
           final officeRoom = Room(
             id: professor.officeRoomId ?? 0,
