@@ -45,7 +45,7 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 32),
             if (user != null) _buildInfoCard(user.username, user.studentId),
             const SizedBox(height: 16),
-            _buildMenuCard(context),
+            _buildMenuCard(context, ref),
             const SizedBox(height: 16),
             if (user != null) _buildLogoutButton(context, ref),
           ],
@@ -133,7 +133,11 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMenuCard(BuildContext context) {
+ Widget _buildMenuCard(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authProvider).user;
+    final canCreateEvents = user?.canCreateEvents ?? false;
+    final isAdmin = user?.isAdmin ?? false;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -141,12 +145,31 @@ class ProfileScreen extends ConsumerWidget {
       ),
       child: Column(
         children: [
+          // My Events (registered users only)
+          if (canCreateEvents) ...[
+            _menuItem(
+              Icons.event_note,
+              'My Events',
+              () => context.push('/events/my'),
+            ),
+            const Divider(height: 1),
+          ],
+          // Admin Panel (admins only)
+          if (isAdmin) ...[
+            _menuItem(
+              Icons.admin_panel_settings,
+              'Admin Panel',
+              () => context.push('/events/admin'),
+            ),
+            const Divider(height: 1),
+          ],
           _menuItem(
             Icons.privacy_tip_outlined,
             'Privacy Policy',
             () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Privacy Policy - Coming soon')),
+                const SnackBar(
+                    content: Text('Privacy Policy - Coming soon')),
               );
             },
           ),

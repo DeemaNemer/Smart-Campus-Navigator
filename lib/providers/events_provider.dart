@@ -1,78 +1,59 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/event.dart';
 import '../services/api_service.dart';
+import 'auth_provider.dart';
 
-// Provider لجلب الأحداث
+// ============================================
+// Public events (filtered by user type)
+// ============================================
 final eventsProvider = FutureProvider<List<Event>>((ref) async {
   final api = ApiService();
-  return api.getEvents();
+  final auth = ref.watch(authProvider);
+
+  // Filter events based on user type
+  String? target;
+  if (auth.user != null) {
+    final type = auth.user!.userType;
+    if (type == 'student') target = 'students';
+    if (type == 'employee') target = 'employees';
+  }
+
+  return api.getEvents(target: target);
 });
 
-// State للإنشاء
-class CreateEventState {
-  final bool isLoading;
-  final String? error;
-  final bool success;
+// ============================================
+// My events (current user's created events)
+// ============================================
+final myEventsProvider = FutureProvider<List<Event>>((ref) async {
+  final api = ApiService();
+  final auth = ref.watch(authProvider);
 
-  CreateEventState({
-    this.isLoading = false,
-    this.error,
-    this.success = false,
-  });
+  if (auth.token == null) return [];
+  return api.getMyEvents(auth.token!);
+});
 
-  CreateEventState copyWith({
-    bool? isLoading,
-    String? error,
-    bool? success,
-    bool clearError = false,
-  }) {
-    return CreateEventState(
-      isLoading: isLoading ?? this.isLoading,
-      error: clearError ? null : (error ?? this.error),
-      success: success ?? this.success,
-    );
+// ============================================
+// Pending events (admin only)
+// ============================================
+final pendingEventsProvider = FutureProvider<List<Event>>((ref) async {
+  final api = ApiService();
+  final auth = ref.watch(authProvider);
+
+  if (auth.token == null || !(auth.user?.isAdmin ?? false)) {
+    return [];
   }
-}
+  return api.getPendingEvents(auth.token!);
+});
 
-class CreateEventNotifier extends StateNotifier<CreateEventState> {
-  final ApiService _api;
-  final Ref _ref;
+// ============================================
+// Event stats (admin only)
+// ============================================
+final eventsStatsProvider = FutureProvider<Map<String, int>>((ref) async {
+  final api = ApiService();
+  final auth = ref.watch(authProvider);
 
-  CreateEventNotifier(this._api, this._ref) : super(CreateEventState());
-
-  Future<void> createEvent({
-    required String title,
-    required String description,
-    required String date,
-    required String time,
-    int? locationRoomId,
-    required String targetCategory,
-  }) async {
-    state = state.copyWith(isLoading: true, clearError: true);
-
-    try {
-      await _api.createEvent(
-        title: title,
-        description: description,
-        date: date,
-        time: time,
-        locationRoomId: locationRoomId,
-        targetCategory: targetCategory,
-      );
-      // Refresh the events list
-      _ref.invalidate(eventsProvider);
-      state = state.copyWith(isLoading: false, success: true);
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-    }
+  if (auth.token == null || !(auth.user?.isAdmin ?? false)) {
+    return {};
   }
-
-  void reset() {
-    state = CreateEventState();
-  }
-}
-
-final createEventProvider =
-    StateNotifierProvider<CreateEventNotifier, CreateEventState>((ref) {
-  return CreateEventNotifier(ApiService(), ref);
+  return api.getEventsStats(auth.token!);
 });

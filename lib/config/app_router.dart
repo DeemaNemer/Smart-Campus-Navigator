@@ -14,7 +14,11 @@ import '../screens/details/room_details_screen.dart';
 import '../screens/details/professor_details_screen.dart';
 import '../screens/details/event_details_screen.dart';
 import '../screens/navigation/navigation_screen.dart';
-import '../screens/events/create_event_screen.dart';
+import '../screens/events/create/create_event_screen.dart';
+import '../screens/events/my_events/my_events_screen.dart';
+import '../screens/events/admin/admin_events_screen.dart';
+import '../screens/events/admin/filtered_events_screen.dart';
+import '../screens/navigation/outdoor_navigation_screen.dart';
 
 class AppRouter {
   AppRouter._();
@@ -45,6 +49,16 @@ class AppRouter {
         },
       ),
       GoRoute(
+        path: '/outdoor-navigation',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, String?>?;
+          return OutdoorNavigationScreen(
+            fromId: extra?['fromId'],
+            toId: extra?['toId'],
+          );
+        },
+      ),
+      GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
@@ -55,7 +69,24 @@ class AppRouter {
           return ResetPasswordScreen(prefilledToken: token);
         },
       ),
-
+      GoRoute(
+        path: '/events/admin/filter/:filter',
+        builder: (context, state) {
+          final filterStr = state.pathParameters['filter'] ?? 'pending';
+          AdminFilter filter;
+          switch (filterStr) {
+            case 'approved':
+              filter = AdminFilter.approved;
+              break;
+            case 'rejected':
+              filter = AdminFilter.rejected;
+              break;
+            default:
+              filter = AdminFilter.pending;
+          }
+          return FilteredEventsScreen(filter: filter);
+        },
+      ),
       // Home (after login)
       GoRoute(
         path: '/home',
@@ -77,23 +108,25 @@ class AppRouter {
           return ProfessorDetailsScreen(professor: professor);
         },
       ),
+      // Event management
+      GoRoute(
+        path: '/events/create',
+        builder: (context, state) => const CreateEventScreen(),
+      ),
+      GoRoute(
+        path: '/events/my',
+        builder: (context, state) => const MyEventsScreen(),
+      ),
+      GoRoute(
+        path: '/events/admin',
+        builder: (context, state) => const AdminEventsScreen(),
+      ),
       GoRoute(
         path: '/event',
         builder: (context, state) {
           final event = state.extra as Event;
           return EventDetailsScreen(event: event);
         },
-      ),
-      GoRoute(
-        path: '/event-details',
-        builder: (context, state) {
-          final event = state.extra as Event;
-          return EventDetailsScreen(event: event);
-        },
-      ),
-      GoRoute(
-        path: '/create-event',
-        builder: (context, state) => const CreateEventScreen(),
       ),
       // Navigation
       GoRoute(

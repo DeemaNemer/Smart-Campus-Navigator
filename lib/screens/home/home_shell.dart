@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
 import '../search/search_screen.dart';
 import '../events/events_screen.dart';
 import '../navigation/floors_screen.dart';
@@ -14,7 +16,6 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _currentIndex = 0;
 
-  // Each tab opens a different screen
   final List<Widget> _screens = const [
     SearchScreen(),
     EventsScreen(),
@@ -25,11 +26,22 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // IndexedStack preserves each screen's state when switching tabs
+      appBar: AppBar(
+        title: const Text("Home"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.map_outlined),
+            tooltip: 'Outdoor Navigation',
+            onPressed: () => context.push('/outdoor-navigation'),
+          ),
+        ],
+      ),
+
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),

@@ -1,15 +1,50 @@
-// Represents an event/announcement
+// Event status from server
+enum EventStatus { pending, approved, rejected, unknown }
+
+EventStatus parseEventStatus(String? value) {
+  switch (value) {
+    case 'pending': return EventStatus.pending;
+    case 'approved': return EventStatus.approved;
+    case 'rejected': return EventStatus.rejected;
+    default: return EventStatus.unknown;
+  }
+}
+
+// Target audience
+enum EventAudience { students, employees, all }
+
+EventAudience parseAudience(String? value) {
+  switch (value) {
+    case 'students': return EventAudience.students;
+    case 'employees': return EventAudience.employees;
+    default: return EventAudience.all;
+  }
+}
+
 class Event {
   final int id;
   final String title;
   final String? description;
-  final String date; // "2026-04-25"
-  final String time; // "14:00"
+  final String date;
+  final String time;
   final int? locationRoomId;
   final String? posterUrl;
   final bool isActive;
 
-  // Location info (flat fields from server)
+  // New fields
+  final EventStatus status;
+  final EventAudience targetAudience;
+  final int? createdByUserId;
+  final String? adminNotes;
+  final String? createdAt;
+  final String? reviewedAt;
+
+  // Creator info (when admin sees pending events)
+  final String? creatorUsername;
+  final String? creatorName;
+  final String? creatorEmail;
+
+  // Location info (flat from server)
   final String? roomNumber;
   final int? floor;
   final double? x;
@@ -24,6 +59,15 @@ class Event {
     this.locationRoomId,
     this.posterUrl,
     required this.isActive,
+    this.status = EventStatus.approved,
+    this.targetAudience = EventAudience.all,
+    this.createdByUserId,
+    this.adminNotes,
+    this.createdAt,
+    this.reviewedAt,
+    this.creatorUsername,
+    this.creatorName,
+    this.creatorEmail,
     this.roomNumber,
     this.floor,
     this.x,
@@ -39,8 +83,16 @@ class Event {
       time: json['time'] as String? ?? '',
       locationRoomId: json['location_room_id'] as int?,
       posterUrl: json['poster_url'] as String?,
-      // Server returns 1/0 instead of true/false
       isActive: (json['is_active'] as int? ?? 0) == 1,
+      status: parseEventStatus(json['status'] as String?),
+      targetAudience: parseAudience(json['target_audience'] as String?),
+      createdByUserId: json['created_by_user_id'] as int?,
+      adminNotes: json['admin_notes'] as String?,
+      createdAt: json['created_at'] as String?,
+      reviewedAt: json['reviewed_at'] as String?,
+      creatorUsername: json['creator_username'] as String?,
+      creatorName: json['creator_name'] as String?,
+      creatorEmail: json['creator_email'] as String?,
       roomNumber: json['room_number'] as String?,
       floor: json['floor'] as int?,
       x: (json['x'] as num?)?.toDouble(),
@@ -48,34 +100,28 @@ class Event {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-      'date': date,
-      'time': time,
-      'location_room_id': locationRoomId,
-      'poster_url': posterUrl,
-      'is_active': isActive ? 1 : 0,
-      'room_number': roomNumber,
-      'floor': floor,
-      'x': x,
-      'y': y,
-    };
-  }
-
-  // Friendly location display
   String get locationDisplay {
     if (roomNumber == null) return 'Location TBA';
-    if (floor != null) {
-      return 'Room $roomNumber • Floor $floor';
-    }
+    if (floor != null) return 'Room $roomNumber • Floor $floor';
     return 'Room $roomNumber';
   }
 
-  // Friendly date+time display
-  String get dateTimeDisplay {
-    return '$date • $time';
+  String get dateTimeDisplay => '$date • $time';
+
+  String get statusLabel {
+    switch (status) {
+      case EventStatus.pending: return 'Pending';
+      case EventStatus.approved: return 'Approved';
+      case EventStatus.rejected: return 'Rejected';
+      case EventStatus.unknown: return 'Unknown';
+    }
+  }
+
+  String get audienceLabel {
+    switch (targetAudience) {
+      case EventAudience.students: return 'Students';
+      case EventAudience.employees: return 'Employees';
+      case EventAudience.all: return 'Everyone';
+    }
   }
 }

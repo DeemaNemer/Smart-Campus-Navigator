@@ -34,6 +34,10 @@ class ApiService {
       ),
     );
   }
+  // Helper: build authorization header from token
+  Options _authOptions(String token) {
+    return Options(headers: {'Authorization': 'Bearer $token'});
+  }
 
   // ============================================
   // Health Check
@@ -136,20 +140,18 @@ class ApiService {
     }
   }
 
-  // ============================================
-  // Get all events
-  // Server returns: { "count": 3, "events": [...] }
-  // ============================================
  // ============================================
-  // Get all events
-  // Server returns: { "count": 3, "events": [...] }
+  // Get all approved events (public)
+  // Optionally filter by target audience
   // ============================================
-  Future<List<Event>> getEvents() async {
+  Future<List<Event>> getEvents({String? target}) async {
     try {
-      final response = await _dio.get('/events');
+      final response = await _dio.get(
+        '/events',
+        queryParameters: target != null ? {'target': target} : null,
+      );
       final data = response.data;
       final List<dynamic> items = _extractList(data, 'events');
-
       return items
           .map((json) => Event.fromJson(json as Map<String, dynamic>))
           .toList();
@@ -157,41 +159,177 @@ class ApiService {
       throw _handleError(e);
     }
   }
-  Future<Event> createEvent({
-  required String title,
-  required String description,
-  required String date,
-  required String time,
-  int? locationRoomId,
-  required String targetCategory,
-}) async {
-  try {
-    final response = await _dio.post('/events', data: {
-      'title': title,
-      'description': description,
-      'date': date,
-      'time': time,
-      'location_room_id': locationRoomId,
-      'target_category': targetCategory,
-    });
-    return Event.fromJson(response.data as Map<String, dynamic>);
-  } on DioException catch (e) {
-    throw _handleError(e);
-  }
-}
 
-Future<List<Room>> getAllRoomsForPicker() async {
-  try {
-    final response = await _dio.get('/rooms');
-    final data = response.data;
-    final List items = _extractList(data, 'rooms');
-    return items
-        .map((json) => Room.fromJson(json as Map<String, dynamic>))
-        .toList();
-  } on DioException catch (e) {
-    throw _handleError(e);
+  // ============================================
+  // Create a new event (authenticated)
+  // ============================================
+  Future<Map<String, dynamic>> createEvent({
+    required String token,
+    required String title,
+    String? description,
+    required String date,        // YYYY-MM-DD
+    required String time,        // HH:MM
+    required int locationRoomId,
+    required String targetAudience, // students/employees/all
+    String? posterUrl,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/events/create',
+        data: {
+          'title': title,
+          'description': description,
+          'date': date,
+          'time': time,
+          'location_room_id': locationRoomId,
+          'target_audience': targetAudience,
+          if (posterUrl != null) 'poster_url': posterUrl,
+        },
+        options: _authOptions(token),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw _handleEventError(e);
+    }
   }
-}
+
+  // ============================================
+  // Get my events (authenticated)
+  // ============================================
+  Future<List<Event>> getMyEvents(String token) async {
+    try {
+      final response = await _dio.get(
+        '/events/my',
+        options: _authOptions(token),
+      );
+      final data = response.data;
+      final List<dynamic> items = _extractList(data, 'events');
+      return items
+          .map((json) => Event.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw _handleEventError(e);
+    }
+  }
+
+  // ============================================
+  // Delete an event (authenticated)
+  // ============================================
+  Future<void> deleteEvent(String token, int eventId) async {
+    try {
+      await _dio.delete(
+        '/events/$eventId',
+        options: _authOptions(token),
+      );
+    } on DioException catch (e) {
+      throw _handleEventError(e);
+    }
+  }
+
+  // ============================================
+  // Admin: Get pending events
+  // ============================================
+  Future<List<Event>> getPendingEvents(String token) async {
+    try {
+      final response = await _dio.get(
+        '/events/pending',
+        options: _authOptions(token),
+      );
+      final data = response.data;
+      final List<dynamic> items = _extractList(data, 'events');
+      return items
+          .map((json) => Event.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw _handleEventError(e);
+    }
+  }
+// ============================================
+  // Admin: Get events by status
+  // status: pending | approved | rejected
+  // ============================================
+  Future<List<Event>> getEventsByStatus(String token, String status) async {
+    try {
+      final response = await _dio.get(
+        '/events/by-status',
+        queryParameters: {'status': status},
+        options: _authOptions(token),
+      );
+      final data = response.data;
+      final List<dynamic> items = _extractList(data, 'events');
+      return items
+          .map((json) => Event.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw _handleEventError(e);
+    }
+  }
+  // ============================================
+  // Admin: Approve event
+  // ============================================
+  Future<void> approveEvent({
+    required String token,
+    required int eventId,
+    String? adminNotes,
+  }) async {
+    try {
+      await _dio.post(
+        '/events/$eventId/approve',
+        data: {'admin_notes': adminNotes},
+        options: _authOptions(token),
+      );
+    } on DioException catch (e) {
+      throw _handleEventError(e);
+    }
+  }
+
+  // ============================================
+  // Admin: Reject event
+  // ============================================
+  Future<void> rejectEvent({
+    required String token,
+    required int eventId,
+    String? adminNotes,
+  }) async {
+    try {
+      await _dio.post(
+        '/events/$eventId/reject',
+        data: {'admin_notes': adminNotes},
+        options: _authOptions(token),
+      );
+    } on DioException catch (e) {
+      throw _handleEventError(e);
+    }
+  }
+
+  // ============================================
+  // Admin: Get events stats
+  // ============================================
+  Future<Map<String, int>> getEventsStats(String token) async {
+    try {
+      final response = await _dio.get(
+        '/events/stats',
+        options: _authOptions(token),
+      );
+      final data = response.data as Map<String, dynamic>;
+      return data.map((k, v) => MapEntry(k, v as int));
+    } on DioException catch (e) {
+      throw _handleEventError(e);
+    }
+  }
+
+  // Helper for event-specific error handling
+  String _handleEventError(DioException e) {
+    if (e.response != null) {
+      final data = e.response!.data;
+      if (data is Map && data.containsKey('detail')) {
+        return data['detail'].toString();
+      }
+    }
+    return _handleError(e);
+  }
+
+
 // ============================================
   // Calculate navigation path
   // POST /navigate with body:

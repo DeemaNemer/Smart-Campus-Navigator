@@ -1,7 +1,7 @@
 class AppConstants {
   AppConstants._();
 
-  // ⚠️ Replace with YOUR laptop's IP
+ 
   static const String baseUrl = 'http://192.168.1.107:8000';
   // University
   static const String universityName = 'Birzeit University';

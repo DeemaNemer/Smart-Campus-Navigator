@@ -4,8 +4,11 @@ import 'package:intl/intl.dart';
 import '../../config/app_colors.dart';
 import '../../models/event.dart';
 import '../../models/room.dart';
-
-class EventDetailsScreen extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/events_provider.dart';
+import '../../services/api_service.dart';
+class EventDetailsScreen extends ConsumerWidget {
   final Event event;
 
   const EventDetailsScreen({super.key, required this.event});
@@ -41,7 +44,7 @@ class EventDetailsScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
@@ -66,11 +69,12 @@ class EventDetailsScreen extends StatelessWidget {
                     _buildLocationCard(),
                   ],
                   const SizedBox(height: 32),
-                  if (_isUpcoming && event.x != null && event.y != null)
-                    _buildNavigateButton(context),
-                  if (!_isUpcoming)
-                    _buildPastEventNote(),
-                  const SizedBox(height: 20),
+            // Show admin actions if user is admin AND event is pending
+             if (_shouldShowAdminActions(ref))
+              _buildAdminActions(context, ref),
+                if (_shouldShowAdminActions(ref)) const SizedBox(height: 16),
+            if (event.roomNumber != null) _buildNavigateButton(context),
+            const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -342,6 +346,204 @@ class EventDetailsScreen extends StatelessWidget {
               value: event.roomNumber!,
             ),
           ],
+        ],
+      ),
+    );
+  }
+  bool _shouldShowAdminActions(WidgetRef ref) {
+    final user = ref.read(authProvider).user;
+    if (user == null || !user.isAdmin) return false;
+    return event.status == EventStatus.pending;
+  }
+
+  Widget _buildAdminActions(BuildContext context, WidgetRef ref) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.admin_panel_settings,
+                  color: AppColors.warning, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Admin Actions',
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _handleReject(context, ref),
+                  icon: const Icon(Icons.close, size: 18),
+                  label: const Text('Reject'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _handleApprove(context, ref),
+                  icon: const Icon(Icons.check, size: 18),
+                  label: const Text('Approve'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.success,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleApprove(BuildContext context, WidgetRef ref) async {
+    final notes = await _showNotesDialog(
+      context,
+      title: 'Approve Event',
+      hint: 'Optional notes for the creator',
+      confirmLabel: 'Approve',
+      confirmColor: AppColors.success,
+    );
+
+    if (notes == null) return;
+
+    final auth = ref.read(authProvider);
+    if (auth.token == null) return;
+
+    try {
+      await ApiService().approveEvent(
+        token: auth.token!,
+        eventId: event.id,
+        adminNotes: notes.isEmpty ? null : notes,
+      );
+
+      ref.invalidate(pendingEventsProvider);
+      ref.invalidate(eventsStatsProvider);
+      ref.invalidate(eventsProvider);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Event approved!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        context.pop(); // Close details screen
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleReject(BuildContext context, WidgetRef ref) async {
+    final notes = await _showNotesDialog(
+      context,
+      title: 'Reject Event',
+      hint: 'Reason for rejection (recommended)',
+      confirmLabel: 'Reject',
+      confirmColor: AppColors.error,
+    );
+
+    if (notes == null) return;
+
+    final auth = ref.read(authProvider);
+    if (auth.token == null) return;
+
+    try {
+      await ApiService().rejectEvent(
+        token: auth.token!,
+        eventId: event.id,
+        adminNotes: notes.isEmpty ? null : notes,
+      );
+
+      ref.invalidate(pendingEventsProvider);
+      ref.invalidate(eventsStatsProvider);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Event rejected'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<String?> _showNotesDialog(
+    BuildContext context, {
+    required String title,
+    required String hint,
+    required String confirmLabel,
+    required Color confirmColor,
+  }) async {
+    final controller = TextEditingController();
+
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: hint,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: Text(
+              confirmLabel,
+              style: TextStyle(color: confirmColor),
+            ),
+          ),
         ],
       ),
     );
