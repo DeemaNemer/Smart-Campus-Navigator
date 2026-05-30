@@ -127,6 +127,10 @@ class AppRouter {
         builder: (context, state) => const AdminEventsScreen(),
       ),
       GoRoute(
+        path: '/admin',
+        builder: (context, state) => const AdminEventsScreen(),
+      ),
+      GoRoute(
         path: '/event',
         builder: (context, state) {
           final event = state.extra as Event;
