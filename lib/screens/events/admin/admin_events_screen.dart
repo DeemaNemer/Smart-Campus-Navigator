@@ -31,13 +31,7 @@ class AdminEventsScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
         ),
         title: const Text('Admin Panel'),
-        actions: [
-          IconButton(
-            tooltip: 'Refresh',
-            icon: const Icon(Icons.refresh),
-            onPressed: () => _refresh(ref),
-          ),
-        ],
+        actions: const [],
       ),
       body: RefreshIndicator(
         color: AppColors.primary,

@@ -246,7 +246,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Smart Campus Navigator'),
+        title: const Text('Create Event'),
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 10),

@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../../config/app_colors.dart';
 import '../../../models/event.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/events_provider.dart';
 import '../../../services/api_service.dart';
+import '../../../widgets/common/birzeit_logo_mark.dart';
 
 // Filter type for admin event listing
 enum AdminFilter { pending, approved, rejected }
@@ -69,12 +71,10 @@ class FilteredEventsScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
         ),
         title: Text(_title),
-        backgroundColor: AppColors.white,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () =>
-                ref.invalidate(adminFilteredEventsProvider(filter)),
+          const Padding(
+            padding: EdgeInsets.only(right: 10),
+            child: BirzeitLogoMark(),
           ),
         ],
       ),
@@ -115,7 +115,7 @@ class FilteredEventsScreen extends ConsumerWidget {
       itemCount: events.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, i) =>
-          _AdminEventCard(event: events[i], color: _color, icon: _icon),
+          _AdminEventCard(event: events[i], color: _color, icon: _icon, filter: filter),
     );
   }
 
@@ -149,19 +149,21 @@ class FilteredEventsScreen extends ConsumerWidget {
 }
 
 // Card for admin event (tappable, opens details)
-class _AdminEventCard extends StatelessWidget {
+class _AdminEventCard extends ConsumerWidget {
   final Event event;
   final Color color;
   final IconData icon;
+  final AdminFilter filter;
 
   const _AdminEventCard({
     required this.event,
     required this.color,
     required this.icon,
+    required this.filter,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Material(
       color: AppColors.white,
       borderRadius: BorderRadius.circular(16),
@@ -200,6 +202,11 @@ class _AdminEventCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
+                  IconButton(
+                    tooltip: 'Delete event',
+                    icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                    onPressed: () => _handleDelete(context, ref),
+                  ),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -276,5 +283,35 @@ class _AdminEventCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _handleDelete(BuildContext context, WidgetRef ref) async {
+    final auth = ref.read(authProvider);
+    if (auth.token == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Event'),
+        content: Text('Delete "${event.title}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await ApiService().deleteEvent(auth.token!, event.id);
+      ref.invalidate(adminFilteredEventsProvider(filter));
+      ref.invalidate(pendingEventsProvider);
+      ref.invalidate(eventsStatsProvider);
+      ref.invalidate(eventsProvider);
+    } catch (_) {}
   }
 }
