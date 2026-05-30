@@ -26,6 +26,13 @@ class MyEventsScreen extends ConsumerWidget {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/events/create'),
+        backgroundColor: AppColors.accent,
+        foregroundColor: AppColors.white,
+        icon: const Icon(Icons.add),
+        label: const Text('Create Event'),
+      ),
       body: eventsAsync.when(
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.primary),
@@ -52,12 +59,6 @@ class MyEventsScreen extends ConsumerWidget {
             const Text(
               'Events you create will appear here.',
               style: TextStyle(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => context.push('/events/create'),
-              icon: const Icon(Icons.add),
-              label: const Text('Create Event'),
             ),
           ],
         ),
@@ -305,22 +306,63 @@ class _MyEventCard extends StatelessWidget {
       ref.invalidate(eventsProvider);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Event deleted'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        _showSystemMessage(context, 'Event deleted');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to delete: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        _showSystemMessage(context, 'Failed to delete: $e', isError: true);
       }
     }
+  }
+
+  Future<void> _showSystemMessage(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isDismissible: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 16,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(
+                    isError ? Icons.error_outline : Icons.info_outline,
+                    color: isError ? AppColors.error : AppColors.info,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

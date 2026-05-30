@@ -180,7 +180,8 @@ class ApiService {
     String? description,
     required String date, // YYYY-MM-DD
     required String time, // HH:MM
-    required int locationRoomId,
+    int? locationRoomId,
+    String? locationText,
     required String targetAudience, // students/employees/all
     String? posterUrl,
   }) async {
@@ -192,7 +193,9 @@ class ApiService {
           'description': description,
           'date': date,
           'time': time,
-          'location_room_id': locationRoomId,
+          if (locationRoomId != null) 'location_room_id': locationRoomId,
+          if (locationText != null && locationText.trim().isNotEmpty)
+            'location_text': locationText.trim(),
           'target_audience': targetAudience,
           if (posterUrl != null) 'poster_url': posterUrl,
         },
@@ -245,6 +248,20 @@ class ApiService {
       );
     } on DioException catch (e) {
       throw _handleEventError(e);
+    }
+  }
+
+  // ============================================
+  // Admin: Delete room
+  // ============================================
+  Future<void> deleteRoom(String token, int roomId) async {
+    try {
+      await _dio.delete(
+        '/rooms/$roomId',
+        options: _authOptions(token),
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
     }
   }
 

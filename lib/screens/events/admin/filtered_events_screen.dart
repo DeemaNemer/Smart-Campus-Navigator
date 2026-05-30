@@ -63,6 +63,11 @@ class FilteredEventsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        automaticallyImplyLeading: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => context.pop(),
+        ),
         title: Text(_title),
         backgroundColor: AppColors.white,
         actions: [

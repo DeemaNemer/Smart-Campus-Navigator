@@ -35,6 +35,7 @@ class Event {
   final String date;
   final String time;
   final int? locationRoomId;
+  final String? locationText;
   final String? posterUrl;
   final bool isActive;
 
@@ -64,6 +65,7 @@ class Event {
     required this.date,
     required this.time,
     this.locationRoomId,
+    this.locationText,
     this.posterUrl,
     required this.isActive,
     this.status = EventStatus.approved,
@@ -89,6 +91,7 @@ class Event {
       date: json['date'] as String? ?? '',
       time: json['time'] as String? ?? '',
       locationRoomId: json['location_room_id'] as int?,
+      locationText: json['location_text'] as String?,
       posterUrl: json['poster_url'] as String?,
       isActive: (json['is_active'] as int? ?? 0) == 1,
       status: parseEventStatus(json['status'] as String?),
@@ -108,6 +111,9 @@ class Event {
   }
 
   String get locationDisplay {
+    if (locationText != null && locationText!.trim().isNotEmpty) {
+      return locationText!;
+    }
     if (roomNumber == null) return 'Location TBA';
     if (floor != null) return 'Room $roomNumber • Floor $floor';
     return 'Room $roomNumber';

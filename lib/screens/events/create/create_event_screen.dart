@@ -21,6 +21,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _customLocationController = TextEditingController();
 
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
@@ -34,6 +35,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _customLocationController.dispose();
     super.dispose();
   }
 
@@ -105,7 +107,11 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
     );
 
     if (result != null) {
-      setState(() => _selectedRoom = result);
+      setState(() {
+        _selectedRoom = result;
+        // Selecting a room means we use DB location, so clear manual location.
+        _customLocationController.clear();
+      });
     }
   }
 
@@ -120,7 +126,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
       setState(() => _error = 'Please pick a time');
       return;
     }
-    if (_selectedRoom == null) {
+    if (_selectedRoom == null && _customLocationController.text.trim().isEmpty) {
       setState(() => _error = 'Please pick a location');
       return;
     }
@@ -152,7 +158,10 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
             : _descriptionController.text.trim(),
         date: dateStr,
         time: timeStr,
-        locationRoomId: _selectedRoom!.id,
+        locationRoomId: _selectedRoom?.id,
+        locationText: _customLocationController.text.trim().isEmpty
+            ? null
+            : _customLocationController.text.trim(),
         targetAudience: _targetAudience,
       );
 
@@ -163,12 +172,9 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
       if (!mounted) return;
 
       // Show success and pop
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] as String? ?? 'Event created'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      final message = result['message'] as String? ?? 'Event created';
+      await _showSubmissionMessage(message);
+      if (!mounted) return;
       context.pop();
     } catch (e) {
       setState(() {
@@ -176,6 +182,61 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
         _error = e.toString();
       });
     }
+  }
+
+  Future<void> _showSubmissionMessage(String message) async {
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isDismissible: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 16,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.info.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.info_outline,
+                        color: AppColors.info, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -216,6 +277,8 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                 ),
                 const SizedBox(height: 14),
                 _buildRoomField(),
+                const SizedBox(height: 12),
+                _buildCustomLocationField(),
                 const SizedBox(height: 20),
                 _buildAudienceSelector(),
                 const SizedBox(height: 20),
@@ -374,6 +437,27 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCustomLocationField() {
+    return TextFormField(
+      controller: _customLocationController,
+      maxLines: 2,
+      decoration: const InputDecoration(
+        labelText: 'Or write custom location',
+        hintText: 'e.g., Main Courtyard, Library Entrance',
+        prefixIcon: Icon(Icons.edit_location_alt_outlined,
+            color: AppColors.primary),
+      ),
+      onChanged: (value) {
+        setState(() {
+          // If user starts typing custom location, use it and clear room pick.
+          if (value.trim().isNotEmpty) {
+            _selectedRoom = null;
+          }
+        });
+      },
     );
   }
 

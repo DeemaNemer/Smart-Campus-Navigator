@@ -50,7 +50,7 @@ class ProfessorDetailsScreen extends StatelessWidget {
       backgroundColor: AppColors.accent,
       foregroundColor: AppColors.white,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded),
         onPressed: () => Navigator.of(context).pop(),
       ),
       flexibleSpace: FlexibleSpaceBar(
