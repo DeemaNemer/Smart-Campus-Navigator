@@ -52,18 +52,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!mounted) return;
 
     if (result != null) {
-      // Show dev code in a snackbar (for testing only)
-      final devCode = result['dev_code'];
-      if (devCode != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Dev Code: $devCode'),
-            duration: const Duration(seconds: 6),
-            backgroundColor: AppColors.info,
-          ),
-        );
-      }
-
       // Navigate to verification screen
       context.push('/verify-email', extra: _emailController.text.trim());
     }

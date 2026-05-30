@@ -6,6 +6,7 @@ import '../../../models/event.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/events_provider.dart';
 import '../../../services/api_service.dart';
+import '../../../widgets/common/birzeit_logo_mark.dart';
 
 class MyEventsScreen extends ConsumerWidget {
   const MyEventsScreen({super.key});
@@ -17,23 +18,13 @@ class MyEventsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('My Events'),
-        backgroundColor: AppColors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(myEventsProvider),
+        title: const Text('Smart Campus Navigator'),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 10),
+            child: BirzeitLogoMark(),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/events/create'),
-        backgroundColor: AppColors.accent,
-        icon: const Icon(Icons.add, color: AppColors.white),
-        label: const Text(
-          'New Event',
-          style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold),
-        ),
       ),
       body: eventsAsync.when(
         loading: () => const Center(
@@ -59,7 +50,7 @@ class MyEventsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Create your first event!',
+              'Events you create will appear here.',
               style: TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 24),

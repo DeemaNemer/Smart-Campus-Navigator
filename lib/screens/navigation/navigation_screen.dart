@@ -6,6 +6,7 @@ import '../../config/floor_config.dart';
 import '../../models/room.dart';
 import '../../providers/navigation_provider.dart';
 import '../../providers/rooms_provider.dart';
+import '../../widgets/common/birzeit_logo_mark.dart';
 import '../../widgets/map/floor_map_view.dart';
 
 class NavigationScreen extends ConsumerStatefulWidget {
@@ -67,6 +68,12 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
         ),
       ),
       centerTitle: true,
+      actions: const [
+        Padding(
+          padding: EdgeInsets.only(right: 10),
+          child: BirzeitLogoMark(),
+        ),
+      ],
     );
   }
 
@@ -579,7 +586,7 @@ class _LocationPickerSheetState extends ConsumerState<_LocationPickerSheet> {
       case 'office':
         return Icons.business_center;
       case 'lab':
-        return Icons.science;
+        return Icons.computer_outlined;
       case 'classroom':
         return Icons.school;
       case 'bathroom':

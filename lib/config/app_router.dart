@@ -19,6 +19,7 @@ import '../screens/events/my_events/my_events_screen.dart';
 import '../screens/events/admin/admin_events_screen.dart';
 import '../screens/events/admin/filtered_events_screen.dart';
 import '../screens/navigation/outdoor_navigation_screen.dart';
+import '../screens/profile/privacy_policy_screen.dart';
 
 class AppRouter {
   AppRouter._();
@@ -91,6 +92,10 @@ class AppRouter {
       GoRoute(
         path: '/home',
         builder: (context, state) => const HomeShell(),
+      ),
+      GoRoute(
+        path: '/privacy-policy',
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
 
       // Details

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../config/app_colors.dart';
 import '../search/search_screen.dart';
 import '../events/events_screen.dart';
 import '../navigation/floors_screen.dart';
 import '../profile/profile_screen.dart';
+import '../../widgets/common/birzeit_logo_mark.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -27,18 +29,25 @@ class _HomeShellState extends State<HomeShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Home"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.map_outlined),
-            tooltip: 'Outdoor Navigation',
-            onPressed: () => context.push('/outdoor-navigation'),
+        automaticallyImplyLeading: false,
+        title: const Text('Smart Campus Navigator'),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 10),
+            child: BirzeitLogoMark(),
           ),
         ],
       ),
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
+      ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Outdoor Navigation',
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.white,
+        onPressed: () => context.push('/outdoor-navigation'),
+        child: const Icon(Icons.map_outlined),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,

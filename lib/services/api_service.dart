@@ -58,13 +58,23 @@ class ApiService {
   // Server returns: { "query": "...", "count": N, "results": [...] }
   // Each item has "type": "lab" | "classroom" | "office" | "bathroom" | "professor"
   // ============================================
-  Future<List<SearchResult>> search(String query) async {
-    if (query.trim().isEmpty) return [];
+  Future<List<SearchResult>> search(String query, {String? category}) async {
+    final cleanQuery = query.trim();
+    final cleanCategory = category?.trim();
+
+    if (cleanQuery.isEmpty &&
+        (cleanCategory == null || cleanCategory.isEmpty)) {
+      return [];
+    }
 
     try {
       final response = await _dio.get(
         '/search',
-        queryParameters: {'q': query.trim()},
+        queryParameters: {
+          'q': cleanQuery,
+          if (cleanCategory != null && cleanCategory.isNotEmpty)
+            'category': cleanCategory,
+        },
       );
 
       final data = response.data as Map<String, dynamic>;
@@ -209,6 +219,17 @@ class ApiService {
           .map((json) => Event.fromJson(json as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      final data = e.response?.data;
+      final detail =
+          data is Map ? (data['detail']?.toString().toLowerCase() ?? '') : '';
+
+      if (statusCode == 404 ||
+          detail.contains('no event') ||
+          detail.contains('not found')) {
+        return [];
+      }
+
       throw _handleEventError(e);
     }
   }

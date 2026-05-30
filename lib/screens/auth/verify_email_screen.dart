@@ -60,13 +60,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     if (!mounted) return;
 
     if (result != null) {
-      // Show dev code (for testing)
-      final devCode = result['dev_code'];
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(devCode != null
-              ? 'New code sent! Dev: $devCode'
-              : 'New code sent to your email'),
+        const SnackBar(
+          content: Text('New code sent to your email'),
           backgroundColor: AppColors.success,
         ),
       );
@@ -93,24 +89,30 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 20),
-              _buildIcon(),
-              const SizedBox(height: 24),
-              _buildHeader(),
-              const SizedBox(height: 32),
-              _buildCodeBoxes(),
-              const SizedBox(height: 16),
-              if (authState.error != null) _buildError(authState.error!),
-              const SizedBox(height: 24),
-              _buildVerifyButton(authState.isLoading),
-              const SizedBox(height: 16),
-              _buildResendLink(authState.isLoading),
-            ],
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight - 48),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 20),
+                  _buildIcon(),
+                  const SizedBox(height: 24),
+                  _buildHeader(),
+                  const SizedBox(height: 32),
+                  _buildCodeBoxes(),
+                  const SizedBox(height: 16),
+                  if (authState.error != null) _buildError(authState.error!),
+                  const SizedBox(height: 24),
+                  _buildVerifyButton(authState.isLoading),
+                  const SizedBox(height: 16),
+                  _buildResendLink(authState.isLoading),
+                ],
+              ),
+            ),
           ),
         ),
       ),

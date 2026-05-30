@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 class OsrmService {
   static const String _baseUrl = 'http://router.project-osrm.org/route/v1/foot';
   static const Distance _distance = Distance();
+  static const double _walkingMetersPerSecond = 1.25;
 
   final Dio _dio = Dio(
     BaseOptions(
@@ -106,9 +107,20 @@ class OsrmService {
         origin: origin,
         destination: destination,
       ),
-      durationSeconds: (route['duration'] as num).toDouble(),
+      durationSeconds: estimateWalkingSeconds(
+        _totalDistance(
+          routeDistance: (route['distance'] as num).toDouble(),
+          routePolyline: routePolyline,
+          origin: origin,
+          destination: destination,
+        ),
+      ),
       steps: steps,
     );
+  }
+
+  static double estimateWalkingSeconds(double meters) {
+    return meters / _walkingMetersPerSecond;
   }
 
   List<LatLng> _connectRouteToMarkers(
@@ -203,8 +215,8 @@ class OsrmRoute {
   }
 
   String get durationLabel {
-    final minutes = (durationSeconds / 60).round();
-    return '$minutes min';
+    final minutes = (durationSeconds / 60).ceil();
+    return minutes <= 1 ? '<1 min' : '$minutes min';
   }
 }
 

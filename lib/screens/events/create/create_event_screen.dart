@@ -8,6 +8,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/events_provider.dart';
 import '../../../providers/rooms_provider.dart';
 import '../../../services/api_service.dart';
+import '../../../widgets/common/birzeit_logo_mark.dart';
 
 class CreateEventScreen extends ConsumerStatefulWidget {
   const CreateEventScreen({super.key});
@@ -184,8 +185,13 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Create Event'),
-        backgroundColor: AppColors.white,
+        title: const Text('Smart Campus Navigator'),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 10),
+            child: BirzeitLogoMark(),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -608,7 +614,7 @@ class _RoomPickerSheetState extends ConsumerState<_RoomPickerSheet> {
       case 'office':
         return Icons.business_center;
       case 'lab':
-        return Icons.science;
+        return Icons.computer_outlined;
       case 'classroom':
         return Icons.school;
       case 'bathroom':

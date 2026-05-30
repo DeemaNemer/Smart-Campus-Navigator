@@ -13,15 +13,7 @@ class EventsScreen extends ConsumerWidget {
     final eventsAsync = ref.watch(eventsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Events'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(eventsProvider),
-          ),
-        ],
-      ),
+      backgroundColor: AppColors.background,
       body: eventsAsync.when(
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.primary),
@@ -57,11 +49,18 @@ class EventsScreen extends ConsumerWidget {
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: () async => ref.invalidate(eventsProvider),
-      child: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: events.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
-        itemBuilder: (context, i) => _EventCard(event: events[i]),
+      child: CustomScrollView(
+        slivers: [
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+            sliver: SliverList.separated(
+              itemCount: events.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, i) => _EventCard(event: events[i]),
+            ),
+          ),
+        ],
       ),
     );
   }

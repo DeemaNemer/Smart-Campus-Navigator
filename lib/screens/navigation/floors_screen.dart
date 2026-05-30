@@ -21,7 +21,6 @@ class _FloorsScreenState extends ConsumerState<FloorsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _buildAppBar(),
       body: Column(
         children: [
           _buildBuildingBar(),
@@ -30,44 +29,6 @@ class _FloorsScreenState extends ConsumerState<FloorsScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  // ===== Top green AppBar (like prototype) =====
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: AppColors.primary,
-      foregroundColor: AppColors.white,
-      elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.menu),
-        onPressed: () {
-          // Drawer/menu - implement later
-        },
-      ),
-      title: const Text(
-        'Smart Campus Navigator',
-        style: TextStyle(
-          color: AppColors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      centerTitle: true,
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: CircleAvatar(
-            backgroundColor: AppColors.white.withValues(alpha: 0.2),
-            radius: 18,
-            child: const Icon(
-              Icons.park,
-              color: AppColors.white,
-              size: 20,
-            ),
-          ),
-        ),
-      ],
     );
   }
 

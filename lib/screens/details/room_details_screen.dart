@@ -260,7 +260,7 @@ class RoomDetailsScreen extends StatelessWidget {
       case 'office':
         return Icons.business_center_outlined;
       case 'lab':
-        return Icons.science_outlined;
+        return Icons.computer_outlined;
       case 'classroom':
         return Icons.school_outlined;
       case 'bathroom':

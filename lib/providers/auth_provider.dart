@@ -49,31 +49,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService;
 
   AuthNotifier(this._authService) : super(AuthState()) {
-    // Check for existing session on app start
-    _checkExistingSession();
+    // Always start from the login screen; this app should not persist sessions.
+    _startFreshSession();
   }
 
-  // Check if there's a saved token and try to restore the session
-  Future<void> _checkExistingSession() async {
-    try {
-      final token = await _authService.getStoredToken();
-      if (token == null) {
-        state = state.copyWith(status: AuthStatus.unauthenticated);
-        return;
-      }
-
-      // Validate token with server
-      final user = await _authService.getCurrentUser(token);
-      state = AuthState(
-        status: AuthStatus.authenticated,
-        user: user,
-        token: token,
-      );
-    } catch (e) {
-      // Token invalid or expired
-      await _authService.clearSession();
-      state = AuthState(status: AuthStatus.unauthenticated);
-    }
+  Future<void> _startFreshSession() async {
+    await _authService.clearStoredSession();
+    state = AuthState(status: AuthStatus.unauthenticated);
   }
 
   // Login

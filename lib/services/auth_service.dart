@@ -17,7 +17,8 @@ class AuthService {
   late final Dio _dio;
 // Google Sign-In instance
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    serverClientId: AppConstants.googleWebClientId,
+    clientId: kIsWeb ? AppConstants.googleWebClientId : null,
+    serverClientId: kIsWeb ? null : AppConstants.googleWebClientId,
     scopes: ['email', 'profile'],
   );
   // Singleton
@@ -252,8 +253,8 @@ class AuthService {
   // ============================================
   Future<void> saveSession(String token, AppUser user) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppConstants.tokenKey, token);
-    await prefs.setString(AppConstants.userKey, jsonEncode(user.toJson()));
+    await prefs.remove(AppConstants.tokenKey);
+    await prefs.remove(AppConstants.userKey);
   }
 
   Future<String?> getStoredToken() async {
@@ -273,11 +274,15 @@ class AuthService {
   }
 
   Future<void> clearSession() async {
+    await clearStoredSession();
+    // Also sign out from Google
+    await signOutGoogle();
+  }
+
+  Future<void> clearStoredSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(AppConstants.tokenKey);
     await prefs.remove(AppConstants.userKey);
-    // Also sign out from Google
-    await signOutGoogle();
   }
 
   // ============================================

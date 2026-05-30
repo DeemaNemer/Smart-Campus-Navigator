@@ -17,7 +17,7 @@ dependencies:
   flutter_riverpod: ^2.5.1
 
   # Networking (for connecting to FastAPI server)
-  http: ^1.2.2
+  http: 1.5.0
   dio: ^5.7.0
 
   # Local Storage
@@ -38,6 +38,7 @@ dependencies:
   # WiFi Scanning (for later)
   wifi_scan: ^0.4.1+2
   permission_handler: ^11.3.1
+  geolocator: ^14.0.2
 
 dev_dependencies:
   flutter_test:

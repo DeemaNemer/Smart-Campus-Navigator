@@ -5,12 +5,14 @@ import '../services/api_service.dart';
 // Holds the current search state
 class SearchState {
   final String query;
+  final String? category;
   final List<SearchResult> results;
   final bool isLoading;
   final String? error;
 
   SearchState({
     this.query = '',
+    this.category,
     this.results = const [],
     this.isLoading = false,
     this.error,
@@ -18,13 +20,16 @@ class SearchState {
 
   SearchState copyWith({
     String? query,
+    String? category,
     List<SearchResult>? results,
     bool? isLoading,
     String? error,
     bool clearError = false,
+    bool clearCategory = false,
   }) {
     return SearchState(
       query: query ?? this.query,
+      category: clearCategory ? null : (category ?? this.category),
       results: results ?? this.results,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
@@ -38,22 +43,33 @@ class SearchNotifier extends StateNotifier<SearchState> {
 
   SearchNotifier(this._api) : super(SearchState());
 
-  Future<void> search(String query) async {
-    // If query is empty, clear results
-    if (query.trim().isEmpty) {
-      state = SearchState();
+  Future<void> search(String query, {String? category}) async {
+    final selectedCategory = category ?? state.category;
+    final cleanQuery = query.trim();
+
+    if (cleanQuery.isEmpty &&
+        (selectedCategory == null || selectedCategory.isEmpty)) {
+      state = state.copyWith(
+        query: query,
+        results: [],
+        isLoading: false,
+        clearError: true,
+      );
       return;
     }
 
-    // Set loading
     state = state.copyWith(
       query: query,
+      category: selectedCategory,
       isLoading: true,
       clearError: true,
     );
 
     try {
-      final results = await _api.search(query);
+      final results = await _api.search(
+        cleanQuery,
+        category: selectedCategory,
+      );
       state = state.copyWith(
         results: results,
         isLoading: false,
@@ -69,6 +85,15 @@ class SearchNotifier extends StateNotifier<SearchState> {
 
   void clear() {
     state = SearchState();
+  }
+
+  void selectCategory(String? category) {
+    state = state.copyWith(
+      category: category,
+      results: [],
+      clearError: true,
+      clearCategory: category == null,
+    );
   }
 }
 

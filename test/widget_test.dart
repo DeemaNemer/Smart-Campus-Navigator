@@ -17,7 +17,9 @@ void main() {
     expect(find.text('Smart Campus'), findsOneWidget);
     expect(find.text('Navigator'), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 1500));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pump();
+
+    expect(find.text('Welcome Back'), findsOneWidget);
   });
 }
