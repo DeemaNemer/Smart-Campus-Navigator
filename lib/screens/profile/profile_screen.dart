@@ -179,7 +179,7 @@ class _QuickActions extends StatelessWidget {
       actions.add(_ActionTile(
         icon: Icons.admin_panel_settings,
         label: 'Admin Panel',
-        onTap: () => context.push('/events/admin'),
+        onTap: () => context.push('/admin'),
       ));
     }
     actions.add(_ActionTile(
