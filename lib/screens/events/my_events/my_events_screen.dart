@@ -45,18 +45,18 @@ class MyEventsScreen extends ConsumerWidget {
 
   Widget _buildList(BuildContext context, WidgetRef ref, List<Event> events) {
     if (events.isEmpty) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.event_note, size: 80, color: AppColors.textLight),
-            const SizedBox(height: 16),
-            const Text(
+            Icon(Icons.event_note, size: 80, color: AppColors.textLight),
+            SizedBox(height: 16),
+            Text(
               'No events yet',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            SizedBox(height: 8),
+            Text(
               'Events you create will appear here.',
               style: TextStyle(color: AppColors.textSecondary),
             ),

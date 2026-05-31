@@ -394,6 +394,8 @@ class ApiService {
     required double destX,
     required double destY,
     required int destFloor,
+    String? sourceZone,
+    String? destZone,
   }) async {
     try {
       final response = await _dio.post(
@@ -406,6 +408,8 @@ class ApiService {
           'dest_x': destX,
           'dest_y': destY,
           'dest_floor': destFloor,
+          if (sourceZone != null) 'source_zone': sourceZone,
+          if (destZone != null) 'dest_zone': destZone,
         },
       );
 

@@ -71,8 +71,8 @@ class FilteredEventsScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
         ),
         title: Text(_title),
-        actions: [
-          const Padding(
+        actions: const [
+          Padding(
             padding: EdgeInsets.only(right: 10),
             child: BirzeitLogoMark(),
           ),

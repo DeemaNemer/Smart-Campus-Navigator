@@ -6,8 +6,10 @@ import '../../models/navigation_path.dart';
 class FloorMapView extends StatefulWidget {
   final FloorConfig floorConfig;
 
-  // Navigation overlays (optional)
+  // Navigation overlays
   final List<PathPoint>? pathPoints;
+  // ⭐ userX/userY = pixel positions in the floor plan image
+  // (caller looks them up from RoomPixels.get(floor, roomNumber))
   final double? userX;
   final double? userY;
   final double? destX;
@@ -61,9 +63,6 @@ class _FloorMapViewState extends State<FloorMapView> {
   }
 }
 
-// =============================================
-// The map image + overlays (path + markers)
-// =============================================
 class _MapWithOverlay extends StatelessWidget {
   final FloorConfig floorConfig;
   final List<PathPoint>? pathPoints;
@@ -83,105 +82,78 @@ class _MapWithOverlay extends StatelessWidget {
     required this.availableSize,
   });
 
-  // Convert data (x, y) → pixel position
-  Offset _dataToPixel(double dataX, double dataY) {
-    final width = availableSize.width;
-    final height = availableSize.height;
+  // ⭐ Convert image pixel → widget pixel
+  // Image is shown with BoxFit.contain — we replicate the same scaling.
+  Offset _imgPxToWidget(double imgX, double imgY) {
+    final imgW = floorConfig.imageWidth;
+    final imgH = floorConfig.imageHeight;
+    final widgetW = availableSize.width;
+    final widgetH = availableSize.height;
 
-    final mapLeft = width * floorConfig.paddingLeftRatio;
-    final mapTop = height * floorConfig.paddingTopRatio;
-    final mapWidth = width *
-        (1.0 - floorConfig.paddingLeftRatio - floorConfig.paddingRightRatio);
-    final mapHeight = height *
-        (1.0 - floorConfig.paddingTopRatio - floorConfig.paddingBottomRatio);
+    final scaleX = widgetW / imgW;
+    final scaleY = widgetH / imgH;
+    final scale = scaleX < scaleY ? scaleX : scaleY;
 
-    final dataWidth = floorConfig.maxX - floorConfig.minX;
-    final dataHeight = floorConfig.maxY - floorConfig.minY;
+    final displayedW = imgW * scale;
+    final displayedH = imgH * scale;
+    final offsetX = (widgetW - displayedW) / 2;
+    final offsetY = (widgetH - displayedH) / 2;
 
-    final pixelX =
-        mapLeft + ((dataX - floorConfig.minX) / dataWidth) * mapWidth;
-    final pixelY =
-        mapTop + ((dataY - floorConfig.minY) / dataHeight) * mapHeight;
-
-    return Offset(pixelX, pixelY);
+    return Offset(offsetX + imgX * scale, offsetY + imgY * scale);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Filter path to only points on the current floor
     final pointsOnThisFloor =
         pathPoints?.where((p) => p.floor == floorConfig.floor).toList() ?? [];
 
     return Stack(
       children: [
-        // Background: the floor image
+        // Background floor plan image
         Center(
           child: Image.asset(
             floorConfig.imagePath,
             fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+            errorBuilder: (_, __, ___) => _buildPlaceholder(),
           ),
         ),
-
         // Path line (drawn over the map)
         if (pointsOnThisFloor.length >= 2)
           Positioned.fill(
             child: CustomPaint(
               painter: _PathPainter(
                 points: pointsOnThisFloor,
-                dataToPixel: _dataToPixel,
+                imgPxToWidget: _imgPxToWidget,
               ),
             ),
           ),
-
-        // User location marker (orange dot)
+        // User marker (orange dot)
         if (userX != null && userY != null) _buildUserMarker(),
-
         // Destination marker (orange pin)
         if (destX != null && destY != null) _buildDestMarker(),
       ],
     );
   }
 
-  Widget _buildPlaceholder() {
-    return Container(
-      width: 300,
-      height: 400,
-      decoration: BoxDecoration(
-        color: AppColors.cardBg.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.map_outlined,
-                size: 80, color: AppColors.textLight),
-            const SizedBox(height: 16),
-            Text(
-              floorConfig.name,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Image not found',
-              style: TextStyle(color: AppColors.textLight, fontSize: 12),
-            ),
-          ],
+  Widget _buildPlaceholder() => Container(
+        width: 300,
+        height: 400,
+        decoration: BoxDecoration(
+          color: AppColors.cardBg.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(12),
         ),
-      ),
-    );
-  }
+        child: Center(
+          child: Text(
+            '${floorConfig.name}\nImage not found',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+      );
 
-  // User's current location - orange circle with white inner dot
   Widget _buildUserMarker() {
-    final pos = _dataToPixel(userX!, userY!);
-    const size = 24.0;
-
+    final pos = _imgPxToWidget(userX!, userY!);
+    const size = 16.0;
     return Positioned(
       left: pos.dx - size / 2,
       top: pos.dy - size / 2,
@@ -191,12 +163,12 @@ class _MapWithOverlay extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.accent,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.white, width: 3),
+          border: Border.all(color: AppColors.white, width: 2),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accent.withValues(alpha: 0.5),
-              blurRadius: 8,
-              spreadRadius: 2,
+              color: AppColors.accent.withValues(alpha: 0.45),
+              blurRadius: 6,
+              spreadRadius: 1,
             ),
           ],
         ),
@@ -204,11 +176,9 @@ class _MapWithOverlay extends StatelessWidget {
     );
   }
 
-  // Destination - orange location pin
   Widget _buildDestMarker() {
-    final pos = _dataToPixel(destX!, destY!);
-    const size = 32.0;
-
+    final pos = _imgPxToWidget(destX!, destY!);
+    const size = 24.0;
     return Positioned(
       left: pos.dx - size / 2,
       top: pos.dy - size,
@@ -217,57 +187,53 @@ class _MapWithOverlay extends StatelessWidget {
         color: AppColors.accent,
         size: size,
         shadows: [
-          Shadow(
-            color: AppColors.accent.withValues(alpha: 0.5),
-            blurRadius: 8,
-          ),
+          Shadow(color: AppColors.accent.withValues(alpha: 0.45), blurRadius: 6),
         ],
       ),
     );
   }
 }
 
-// =============================================
-// CustomPainter for drawing the path line
-// =============================================
 class _PathPainter extends CustomPainter {
   final List<PathPoint> points;
-  final Offset Function(double, double) dataToPixel;
+  final Offset Function(double, double) imgPxToWidget;
 
-  _PathPainter({
-    required this.points,
-    required this.dataToPixel,
-  });
+  _PathPainter({required this.points, required this.imgPxToWidget});
 
   @override
   void paint(Canvas canvas, Size size) {
     if (points.length < 2) return;
 
-    final paint = Paint()
-      ..color = AppColors.accent
-      ..strokeWidth = 4
+    // Shadow / glow underneath
+    final shadowPaint = Paint()
+      ..color = AppColors.accent.withValues(alpha: 0.2)
+      ..strokeWidth = 6
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    // Dashed line effect
-    final path = Path();
-    final firstPos = dataToPixel(points.first.x, points.first.y);
-    path.moveTo(firstPos.dx, firstPos.dy);
+    final linePaint = Paint()
+      ..color = AppColors.accent
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
+    final path = Path();
+    final first = imgPxToWidget(points.first.x, points.first.y);
+    path.moveTo(first.dx, first.dy);
     for (int i = 1; i < points.length; i++) {
-      final pos = dataToPixel(points[i].x, points[i].y);
-      path.lineTo(pos.dx, pos.dy);
+      final p = imgPxToWidget(points[i].x, points[i].y);
+      path.lineTo(p.dx, p.dy);
     }
 
-    // Draw dashed path
-    _drawDashedPath(canvas, path, paint);
+    // Draw glow first, then dashes on top
+    _drawDashedPath(canvas, path, shadowPaint, dashWidth: 8, dashGap: 5);
+    _drawDashedPath(canvas, path, linePaint, dashWidth: 8, dashGap: 5);
   }
 
-  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
-    const dashWidth = 8.0;
-    const dashGap = 6.0;
-
+  void _drawDashedPath(Canvas canvas, Path path, Paint paint,
+      {double dashWidth = 8.0, double dashGap = 5.0}) {
     for (final metric in path.computeMetrics()) {
       double distance = 0;
       while (distance < metric.length) {
@@ -275,16 +241,12 @@ class _PathPainter extends CustomPainter {
             ? dashWidth
             : metric.length - distance;
         canvas.drawPath(
-          metric.extractPath(distance, distance + length),
-          paint,
-        );
+            metric.extractPath(distance, distance + length), paint);
         distance += dashWidth + dashGap;
       }
     }
   }
 
   @override
-  bool shouldRepaint(covariant _PathPainter oldDelegate) {
-    return oldDelegate.points != points;
-  }
+  bool shouldRepaint(covariant _PathPainter old) => old.points != points;
 }

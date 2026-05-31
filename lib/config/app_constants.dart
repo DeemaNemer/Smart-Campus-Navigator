@@ -1,14 +1,14 @@
 class AppConstants {
   AppConstants._();
 
-  static const String baseUrl = 'http://192.168.1.23:8000';
+  static const String baseUrl = 'http://192.168.1.102:8000';
   // University
   static const String universityName = 'Birzeit University';
   static const String buildingName = 'IT Building';
 
   // Floorsس
   static const int totalFloors = 5;
-
+    
   // Network timeouts
   static const int connectTimeout = 10;
   static const int receiveTimeout = 15;

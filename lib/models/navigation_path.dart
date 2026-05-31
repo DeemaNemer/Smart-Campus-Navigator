@@ -3,34 +3,33 @@ class PathPoint {
   final double x;
   final double y;
   final int floor;
-  final String? type; // optional: 'walk', 'stairs', 'elevator'
+  final String? type;
+  final String? label;
 
   PathPoint({
     required this.x,
     required this.y,
     required this.floor,
     this.type,
+    this.label,
   });
 
   factory PathPoint.fromJson(Map<String, dynamic> json) {
     return PathPoint(
       x: (json['x'] as num).toDouble(),
       y: (json['y'] as num).toDouble(),
-      floor: json['floor'] as int,
+      floor: (json['floor'] as num).toInt(),
       type: json['type'] as String?,
+      label: json['location'] as String? ?? json['label'] as String?,
     );
   }
 }
 
-// Represents a navigation instruction step
 class NavigationStep {
-  final String type; // 'walk', 'stairs', 'elevator', 'arrived'
+  final String type;
   final String text;
 
-  NavigationStep({
-    required this.type,
-    required this.text,
-  });
+  NavigationStep({required this.type, required this.text});
 
   factory NavigationStep.fromJson(Map<String, dynamic> json) {
     return NavigationStep(
@@ -40,7 +39,6 @@ class NavigationStep {
   }
 }
 
-// The full navigation result
 class NavigationPath {
   final bool success;
   final List<PathPoint> path;
@@ -68,7 +66,7 @@ class NavigationPath {
           .map((p) => PathPoint.fromJson(p as Map<String, dynamic>))
           .toList(),
       distance: (json['distance'] as num?)?.toDouble() ?? 0,
-      steps: json['steps'] as int? ?? 0,
+      steps: (json['steps'] as num?)?.toInt() ?? 0,
       instructions: instructionsList
           .map((i) => NavigationStep.fromJson(i as Map<String, dynamic>))
           .toList(),
@@ -76,11 +74,9 @@ class NavigationPath {
     );
   }
 
-  // Get just the start and end points
   PathPoint? get startPoint => path.isNotEmpty ? path.first : null;
   PathPoint? get endPoint => path.isNotEmpty ? path.last : null;
 
-  // Group path points by floor (for multi-floor paths)
   Map<int, List<PathPoint>> get pathByFloor {
     final result = <int, List<PathPoint>>{};
     for (final point in path) {
