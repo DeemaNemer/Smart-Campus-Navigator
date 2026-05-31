@@ -39,10 +39,21 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _buildAppBar(),
+      appBar: AppBar(
+        title: const Text('Indoor Navigation'),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 10),
+            child: BirzeitLogoMark(),
+          ),
+        ],
+      ),
       body: Column(
         children: [
-          _buildBuildingBar(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+            child: _buildBuildingBar(),
+          ),
           Expanded(child: _buildMap(navState, config)),
           _buildBottomPanel(navState),
         ],
@@ -50,37 +61,21 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: AppColors.primary,
-      foregroundColor: AppColors.white,
-      elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.pop(context),
-      ),
-      title: const Text(
-        'Smart Campus Navigator',
-        style: TextStyle(
-          color: AppColors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      centerTitle: true,
-      actions: const [
-        Padding(
-          padding: EdgeInsets.only(right: 10),
-          child: BirzeitLogoMark(),
-        ),
-      ],
-    );
-  }
-
   Widget _buildBuildingBar() {
     return Container(
-      color: AppColors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Container(
@@ -153,117 +148,157 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
       destY: (widget.destination.floor == _displayedFloor)
           ? widget.destination.y
           : null,
+      userRoomNumber:
+          navState.userLocation?.roomNumber ?? navState.userLocation?.name,
+      destRoomNumber: widget.destination.roomNumber ?? widget.destination.name,
     );
   }
 
   // ===== Bottom panel with location cards + start button =====
   Widget _buildBottomPanel(NavigationState navState) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // "You Are Here" card
-          _LocationCard(
-            label: 'You Are Here',
-            value: navState.userLocation?.name ?? 'Tap to set your location',
-            isPlaceholder: navState.userLocation == null,
-            onTap: _showLocationPicker,
-          ),
-          const SizedBox(height: 10),
-          // "Your destination is" card
-          _LocationCard(
-            label: 'Your destination is',
-            value: widget.destination.name,
-            isPlaceholder: false,
-            onTap: null,
-          ),
-          const SizedBox(height: 16),
-          // Start Navigation button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: navState.isCalculating || !navState.isReady
-                  ? null
-                  : () {
-                      ref.read(navigationProvider.notifier).calculatePath();
-                    },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                disabledBackgroundColor:
-                    AppColors.accent.withValues(alpha: 0.4),
-              ),
-              child: navState.isCalculating
-                  ? const SizedBox(
-                      height: 22,
-                      width: 22,
-                      child: CircularProgressIndicator(
-                        color: AppColors.white,
-                        strokeWidth: 2.5,
-                      ),
-                    )
-                  : Text(
-                      navState.path != null
-                          ? 'Recalculate'
-                          : 'Start Navigation',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        decoration: BoxDecoration(
+          color: AppColors.background.withValues(alpha: 0.96),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.14),
+              blurRadius: 22,
+              offset: const Offset(0, 8),
             ),
-          ),
-          // Error message
-          if (navState.error != null) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+          ],
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // "You Are Here" card
+            _LocationCard(
+              label: 'You Are Here',
+              value: navState.userLocation?.name ?? 'Tap to set your location',
+              isPlaceholder: navState.userLocation == null,
+              onTap: _showLocationPicker,
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: navState.isLocating
+                    ? null
+                    : () async {
+                        await ref
+                            .read(navigationProvider.notifier)
+                            .locateFromWifi();
+                        final location =
+                            ref.read(navigationProvider).userLocation;
+                        if (mounted && location != null) {
+                          setState(() => _displayedFloor = location.floor);
+                        }
+                      },
+                icon: navState.isLocating
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.wifi_tethering),
+                label: Text(navState.isLocating
+                    ? 'Locating...'
+                    : 'Use Live Indoor Location'),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.error_outline,
-                      color: AppColors.error, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      navState.error!,
-                      style:
-                          const TextStyle(color: AppColors.error, fontSize: 12),
+            ),
+            const SizedBox(height: 10),
+            // "Your destination is" card
+            _LocationCard(
+              label: 'Your destination is',
+              value: widget.destination.name,
+              isPlaceholder: false,
+              onTap: null,
+            ),
+            const SizedBox(height: 16),
+            // Start Navigation button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: navState.isCalculating || !navState.isReady
+                    ? null
+                    : () {
+                        ref.read(navigationProvider.notifier).calculatePath();
+                      },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  disabledBackgroundColor:
+                      AppColors.accent.withValues(alpha: 0.4),
+                ),
+                child: navState.isCalculating
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(
+                          color: AppColors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    : Text(
+                        navState.path != null
+                            ? 'Recalculate'
+                            : 'Start Navigation',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ),
+            // Error message
+            if (navState.error != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline,
+                        color: AppColors.error, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        navState.error!,
+                        style: const TextStyle(
+                            color: AppColors.error, fontSize: 12),
+                      ),
                     ),
+                  ],
+                ),
+              ),
+            ],
+            // Path info (distance + steps)
+            if (navState.path != null && navState.path!.success) ...[
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _InfoChip(
+                    icon: Icons.straighten,
+                    label: '${navState.path!.distance.toStringAsFixed(1)}m',
+                  ),
+                  const SizedBox(width: 12),
+                  _InfoChip(
+                    icon: Icons.directions_walk,
+                    label: '${navState.path!.steps} steps',
                   ),
                 ],
               ),
-            ),
+            ],
           ],
-          // Path info (distance + steps)
-          if (navState.path != null && navState.path!.success) ...[
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _InfoChip(
-                  icon: Icons.straighten,
-                  label: '${navState.path!.distance.toStringAsFixed(1)}m',
-                ),
-                const SizedBox(width: 12),
-                _InfoChip(
-                  icon: Icons.directions_walk,
-                  label: '${navState.path!.steps} steps',
-                ),
-              ],
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
@@ -344,6 +379,7 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
           scrollController: scrollController,
           onSelected: (room) {
             ref.read(navigationProvider.notifier).setUserLocation(room);
+            setState(() => _displayedFloor = room.floor);
             Navigator.pop(context);
           },
         ),

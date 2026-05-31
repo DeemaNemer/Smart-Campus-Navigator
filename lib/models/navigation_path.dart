@@ -4,20 +4,23 @@ class PathPoint {
   final double y;
   final int floor;
   final String? type; // optional: 'walk', 'stairs', 'elevator'
+  final String? location;
 
   PathPoint({
     required this.x,
     required this.y,
     required this.floor,
     this.type,
+    this.location,
   });
 
   factory PathPoint.fromJson(Map<String, dynamic> json) {
     return PathPoint(
-      x: (json['x'] as num).toDouble(),
-      y: (json['y'] as num).toDouble(),
-      floor: json['floor'] as int,
+      x: (json['x'] as num?)?.toDouble() ?? 0,
+      y: (json['y'] as num?)?.toDouble() ?? 0,
+      floor: (json['floor'] as num?)?.toInt() ?? 0,
       type: json['type'] as String?,
+      location: json['location'] as String?,
     );
   }
 }

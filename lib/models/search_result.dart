@@ -38,9 +38,6 @@ class SearchResult {
       final p = professor!;
       // "Computer Engineering • Office 314 • Floor 2"
       final parts = <String>[];
-      if (p.department != null && p.department!.isNotEmpty) {
-        parts.add(p.department!);
-      }
       if (p.roomNumber != null) {
         parts.add('Office ${p.roomNumber}');
       }

@@ -3,6 +3,8 @@ class FloorConfig {
   final int floor;
   final String name;
   final String imagePath;
+  final double imageWidth;
+  final double imageHeight;
 
   // Data bounds - the actual coordinate range in your data
   final double minX;
@@ -20,6 +22,8 @@ class FloorConfig {
     required this.floor,
     required this.name,
     required this.imagePath,
+    required this.imageWidth,
+    required this.imageHeight,
     this.minX = 0,
     required this.maxX,
     this.minY = 0,
@@ -62,6 +66,8 @@ class FloorConfigs {
       floor: 0,
       name: 'Ground Floor',
       imagePath: 'assets/maps/floor_0.png',
+      imageWidth: 347,
+      imageHeight: 720,
       minX: _unifiedMinX,
       maxX: _unifiedMaxX,
       minY: _unifiedMinY,
@@ -75,6 +81,8 @@ class FloorConfigs {
       floor: 1,
       name: 'First Floor',
       imagePath: 'assets/maps/floor_1.png',
+      imageWidth: 347,
+      imageHeight: 718,
       minX: _unifiedMinX,
       maxX: _unifiedMaxX,
       minY: _unifiedMinY,
@@ -88,6 +96,8 @@ class FloorConfigs {
       floor: 2,
       name: 'Second Floor',
       imagePath: 'assets/maps/floor_2.png',
+      imageWidth: 339,
+      imageHeight: 737,
       minX: _unifiedMinX,
       maxX: _unifiedMaxX,
       minY: _unifiedMinY,
@@ -101,6 +111,8 @@ class FloorConfigs {
       floor: 3,
       name: 'Third Floor',
       imagePath: 'assets/maps/floor_3.png',
+      imageWidth: 368,
+      imageHeight: 677,
       minX: _unifiedMinX,
       maxX: _unifiedMaxX,
       minY: _unifiedMinY,
@@ -114,6 +126,8 @@ class FloorConfigs {
       floor: 4,
       name: 'Fourth Floor',
       imagePath: 'assets/maps/floor_4.png',
+      imageWidth: 349,
+      imageHeight: 715,
       minX: _unifiedMinX,
       maxX: _unifiedMaxX,
       minY: _unifiedMinY,

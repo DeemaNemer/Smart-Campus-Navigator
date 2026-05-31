@@ -4,10 +4,13 @@ import 'package:intl/intl.dart';
 import '../../config/app_colors.dart';
 import '../../models/event.dart';
 import '../../models/room.dart';
+import '../../models/campus_building.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/events_provider.dart';
 import '../../services/api_service.dart';
+import '../../widgets/common/system_message.dart';
+import '../../config/campus_buildings.dart';
 
 class EventDetailsScreen extends ConsumerWidget {
   final Event event;
@@ -44,6 +47,47 @@ class EventDetailsScreen extends ConsumerWidget {
     }
   }
 
+  bool get _hasIndoorLocation =>
+      event.roomNumber != null &&
+      event.x != null &&
+      event.y != null &&
+      event.floor != null;
+
+  bool get _hasNavigableLocation =>
+      _hasIndoorLocation || _buildingForEventLocation != null;
+
+  CampusBuilding? get _buildingForEventLocation {
+    final text = event.locationText?.trim();
+    if (text == null || text.isEmpty) return null;
+    final normalized = _normalizeLocationText(text);
+
+    for (final building in CampusBuildings.all) {
+      final aliases = <String>[
+        building.id,
+        building.nameEn,
+        building.nameAr,
+        building.description ?? '',
+        if (building.id == 'najjad_zani') 'najjad zani',
+        if (building.id == 'najjad_zani') 'najad zeni',
+        if (building.id == 'najjad_zani') 'najad zani',
+        if (building.id == 'masri') 'it building',
+        if (building.id == 'masri') 'information technology',
+      ];
+      if (aliases
+          .map(_normalizeLocationText)
+          .any((alias) => alias.isNotEmpty && normalized.contains(alias))) {
+        return building;
+      }
+    }
+    return null;
+  }
+
+  String _normalizeLocationText(String value) {
+    return value
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9\u0600-\u06ff]+'), '');
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
@@ -78,7 +122,7 @@ class EventDetailsScreen extends ConsumerWidget {
                   if (_shouldShowAdminActions(ref))
                     _buildAdminActions(context, ref),
                   if (_shouldShowAdminActions(ref)) const SizedBox(height: 16),
-                  if (event.roomNumber != null) _buildNavigateButton(context),
+                  if (_hasNavigableLocation) _buildNavigateButton(context),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -449,21 +493,21 @@ class EventDetailsScreen extends ConsumerWidget {
       ref.invalidate(eventsProvider);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Event approved!'),
-            backgroundColor: AppColors.success,
-          ),
+        showSystemMessage(
+          context,
+          message: 'Event approved',
+          icon: Icons.check_circle_outline,
+          color: AppColors.success,
         );
         context.pop(); // Close details screen
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed: $e'),
-            backgroundColor: AppColors.error,
-          ),
+        showSystemMessage(
+          context,
+          message: 'Failed: $e',
+          icon: Icons.error_outline,
+          color: AppColors.error,
         );
       }
     }
@@ -494,21 +538,21 @@ class EventDetailsScreen extends ConsumerWidget {
       ref.invalidate(eventsStatsProvider);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Event rejected'),
-            backgroundColor: AppColors.error,
-          ),
+        showSystemMessage(
+          context,
+          message: 'Event rejected',
+          icon: Icons.cancel_outlined,
+          color: AppColors.error,
         );
         context.pop();
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed: $e'),
-            backgroundColor: AppColors.error,
-          ),
+        showSystemMessage(
+          context,
+          message: 'Failed: $e',
+          icon: Icons.error_outline,
+          color: AppColors.error,
         );
       }
     }
@@ -558,20 +602,7 @@ class EventDetailsScreen extends ConsumerWidget {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: () {
-          // نبني Room مؤقت من معلومات الحدث
-          final eventRoom = Room(
-            id: event.locationRoomId ?? 0,
-            name: 'Event: ${event.title}',
-            roomNumber: event.roomNumber,
-            x: event.x!,
-            y: event.y!,
-            floor: event.floor!,
-            type: 'classroom',
-            description: 'Event location',
-          );
-          context.push('/navigate', extra: eventRoom);
-        },
+        onPressed: () => _openEventDirections(context),
         icon: const Icon(Icons.navigation),
         label: const Text(
           'Get Directions to Event',
@@ -582,6 +613,31 @@ class EventDetailsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _openEventDirections(BuildContext context) {
+    if (_hasIndoorLocation) {
+      final eventRoom = Room(
+        id: event.locationRoomId ?? 0,
+        name: 'Event: ${event.title}',
+        roomNumber: event.roomNumber,
+        x: event.x!,
+        y: event.y!,
+        floor: event.floor!,
+        type: 'classroom',
+        description: 'Event location',
+      );
+      context.push('/navigate', extra: eventRoom);
+      return;
+    }
+
+    final building = _buildingForEventLocation;
+    if (building != null) {
+      context.push(
+        '/outdoor-navigation',
+        extra: {'fromId': 'masri', 'toId': building.id},
+      );
+    }
   }
 
   Widget _buildPastEventNote() {

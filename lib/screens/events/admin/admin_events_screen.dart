@@ -7,6 +7,7 @@ import '../../../models/event.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/events_provider.dart';
 import '../../../services/api_service.dart';
+import '../../../widgets/common/system_message.dart';
 
 class AdminEventsScreen extends ConsumerWidget {
   const AdminEventsScreen({super.key});
@@ -739,20 +740,20 @@ class _PendingEventCard extends ConsumerWidget {
       ref.invalidate(eventsProvider);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(successMessage),
-            backgroundColor: AppColors.success,
-          ),
+        showSystemMessage(
+          context,
+          message: successMessage,
+          icon: Icons.check_circle_outline,
+          color: AppColors.success,
         );
       }
     } catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed: $error'),
-            backgroundColor: AppColors.error,
-          ),
+        showSystemMessage(
+          context,
+          message: 'Failed: $error',
+          icon: Icons.error_outline,
+          color: AppColors.error,
         );
       }
     }

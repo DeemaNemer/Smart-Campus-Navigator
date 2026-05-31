@@ -9,6 +9,7 @@ import '../../../providers/events_provider.dart';
 import '../../../providers/rooms_provider.dart';
 import '../../../services/api_service.dart';
 import '../../../widgets/common/birzeit_logo_mark.dart';
+import '../../../widgets/common/system_message.dart';
 
 class CreateEventScreen extends ConsumerStatefulWidget {
   const CreateEventScreen({super.key});
@@ -126,7 +127,8 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
       setState(() => _error = 'Please pick a time');
       return;
     }
-    if (_selectedRoom == null && _customLocationController.text.trim().isEmpty) {
+    if (_selectedRoom == null &&
+        _customLocationController.text.trim().isEmpty) {
       setState(() => _error = 'Please pick a location');
       return;
     }
@@ -150,7 +152,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
       final timeStr =
           '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}';
 
-      final result = await api.createEvent(
+      await api.createEvent(
         token: auth.token!,
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim().isEmpty
@@ -171,10 +173,12 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
       if (!mounted) return;
 
-      // Show success and pop
-      final message = result['message'] as String? ?? 'Event created';
-      await _showSubmissionMessage(message);
-      if (!mounted) return;
+      showSystemMessage(
+        context,
+        message: 'Your event will be reviewed by an admin before publishing',
+        icon: Icons.info_outline,
+        color: AppColors.info,
+      );
       context.pop();
     } catch (e) {
       setState(() {
@@ -184,65 +188,8 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
     }
   }
 
-  Future<void> _showSubmissionMessage(String message) async {
-    return showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isDismissible: true,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 16,
-                  offset: Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.info.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.info_outline,
-                        color: AppColors.info, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      message,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isAdmin = ref.watch(authProvider).user?.isAdmin ?? false;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -262,8 +209,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (!isAdmin) _buildInfoBanner(),
-                const SizedBox(height: 16),
                 _buildTitleField(),
                 const SizedBox(height: 14),
                 _buildDescriptionField(),
@@ -290,29 +235,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildInfoBanner() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.info.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.info_outline, color: AppColors.info, size: 20),
-          SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Your event will be reviewed by an admin before publishing',
-              style: TextStyle(color: AppColors.info, fontSize: 12),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -447,8 +369,8 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
       decoration: const InputDecoration(
         labelText: 'Or write custom location',
         hintText: 'e.g., Main Courtyard, Library Entrance',
-        prefixIcon: Icon(Icons.edit_location_alt_outlined,
-            color: AppColors.primary),
+        prefixIcon:
+            Icon(Icons.edit_location_alt_outlined, color: AppColors.primary),
       ),
       onChanged: (value) {
         setState(() {

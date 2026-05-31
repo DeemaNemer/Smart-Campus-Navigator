@@ -25,10 +25,6 @@ class ProfessorDetailsScreen extends StatelessWidget {
                   _buildContactCard(),
                   const SizedBox(height: 16),
                   if (professor.roomNumber != null) _buildOfficeCard(),
-                  if (professor.officeHours != null) ...[
-                    const SizedBox(height: 16),
-                    _buildOfficeHoursCard(),
-                  ],
                   const SizedBox(height: 32),
                   if (professor.roomNumber != null)
                     _buildNavigateButton(context),
@@ -89,16 +85,6 @@ class ProfessorDetailsScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (professor.department != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    professor.department!,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
@@ -145,12 +131,6 @@ class ProfessorDetailsScreen extends StatelessWidget {
               label: 'Email',
               value: professor.email!,
             ),
-          if (professor.department != null)
-            _IconRow(
-              icon: Icons.business_outlined,
-              label: 'Department',
-              value: professor.department!,
-            ),
         ],
       ),
     );
@@ -194,45 +174,6 @@ class ProfessorDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const _DetailRow(label: 'Building', value: 'IT Building'),
-        ],
-      ),
-    );
-  }
-
-  // ===== Office hours card =====
-  Widget _buildOfficeHoursCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.access_time, color: AppColors.accent, size: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Office Hours',
-                  style: TextStyle(
-                    color: AppColors.textLight,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  professor.officeHours!,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
