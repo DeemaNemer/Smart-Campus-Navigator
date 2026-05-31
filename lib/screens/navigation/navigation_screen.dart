@@ -1,12 +1,16 @@
-import 'package:flutter/material.dart';
+// screens/navigation/navigation_screen.dart
+//
+// Navigation screen — Live/Manual mode
+// - Manual: المستخدم يختار موقعه يدوياً (للاختبار في البيت)
+// - Live: WiFi scan تلقائي كل 3 ثواني
+
+import 'package:flutter/material.dart' hide NavigationMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/app_colors.dart';
-import '../../config/app_constants.dart';
 import '../../config/floor_config.dart';
 import '../../models/room.dart';
 import '../../providers/navigation_provider.dart';
 import '../../providers/rooms_provider.dart';
-import '../../widgets/common/birzeit_logo_mark.dart';
 import '../../widgets/map/floor_map_view.dart';
 
 class NavigationScreen extends ConsumerStatefulWidget {
@@ -19,246 +23,268 @@ class NavigationScreen extends ConsumerStatefulWidget {
 }
 
 class _NavigationScreenState extends ConsumerState<NavigationScreen> {
-  late int _displayedFloor;
+  int _displayedFloor = 0;
 
   @override
   void initState() {
     super.initState();
-    _displayedFloor = widget.destination.floor;
-
-    // Set the destination once when the screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(navigationProvider.notifier).setDestination(widget.destination);
+      _displayedFloor = widget.destination.floor;
     });
   }
 
   @override
+  void dispose() {
+    ref.read(navigationProvider.notifier).reset();
+    super.dispose();
+  }
+
+  Future<void> _onStartNavigation() async {
+    final notifier = ref.read(navigationProvider.notifier);
+    final state = ref.read(navigationProvider);
+
+    if (!state.hasLocation) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please set your current location first'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    await notifier.calculatePath();
+    // بعد ما يحسب المسار، خلي الخريطة تعرض طابق الـ source
+    final newState = ref.read(navigationProvider);
+    if (newState.path != null && newState.path!.path.isNotEmpty) {
+      setState(() => _displayedFloor = newState.path!.path.first.floor);
+    }
+  }
+
+  Future<void> _onStartLive() async {
+    final ok = await ref.read(navigationProvider.notifier).startLiveMode();
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to start WiFi scanning. Check permissions.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _onPickManualLocation() async {
+    final picked = await _showRoomPicker();
+    if (picked != null) {
+      ref.read(navigationProvider.notifier).setUserLocation(picked);
+      setState(() => _displayedFloor = picked.floor);
+    }
+  }
+
+  Future<Room?> _showRoomPicker() async {
+    return showModalBottomSheet<Room>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (_, scrollCtrl) {
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.my_location, color: AppColors.accent),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'I am at...',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(child: _buildRoomList(scrollCtrl, ctx)),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildRoomList(ScrollController ctrl, BuildContext ctx) {
+    return FutureBuilder<List<Room>>(
+      future: _loadAllRooms(ref),
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snap.hasError || !snap.hasData) {
+          return Center(child: Text('Error: ${snap.error}'));
+        }
+        final allRooms = snap.data!;
+        return ListView.builder(
+          controller: ctrl,
+          itemCount: allRooms.length,
+          itemBuilder: (_, i) {
+            final r = allRooms[i];
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                child: Text(
+                  'F${r.floor}',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              title: Text(r.roomNumber ?? r.name),
+              subtitle: Text(r.roomNumber == null ? r.type : r.name),
+              onTap: () => Navigator.pop(ctx, r),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<List<Room>> _loadAllRooms(WidgetRef ref) async {
+    final all = <Room>[];
+    for (int f = 0; f < 5; f++) {
+      try {
+        final rooms = await ref.read(roomsByFloorProvider(f).future);
+        all.addAll(rooms);
+      } catch (_) {}
+    }
+    all.sort((a, b) {
+      final c = a.floor.compareTo(b.floor);
+      if (c != 0) return c;
+      return (a.roomNumber ?? a.name).compareTo(b.roomNumber ?? b.name);
+    });
+    return all;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final navState = ref.watch(navigationProvider);
-    final config = FloorConfigs.forFloor(_displayedFloor);
+    final state = ref.watch(navigationProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Indoor Navigation'),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 10),
-            child: BirzeitLogoMark(),
-          ),
-        ],
+        title: Text(widget.destination.roomNumber ?? widget.destination.name),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.white,
+        elevation: 0,
+        toolbarHeight: 48,
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-            child: _buildBuildingBar(),
-          ),
-          Expanded(child: _buildMap(navState, config)),
-          _buildBottomPanel(navState),
+          // ─── Mode Toggle (مدمج مع status) ───
+          _buildTopBar(state),
+
+          // ─── Floor Tabs ───
+          if (state.path != null && state.path!.path.isNotEmpty)
+            _buildFloorTabs(state),
+
+          // ─── Map (الجزء الأكبر) ───
+          Expanded(child: _buildMap(state)),
+
+          // ─── Bottom Action Bar ───
+          _buildBottomBar(state),
         ],
       ),
     );
   }
 
-  Widget _buildBuildingBar() {
+  // ═══════════════════════════════════════════════════
+  // Top bar: mode toggle + status (compact)
+  // ═══════════════════════════════════════════════════
+  Widget _buildTopBar(NavigationState state) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      color: AppColors.background,
+      child: Column(
         children: [
+          // Mode toggle
           Container(
-            padding: const EdgeInsets.all(6),
+            height: 38,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.cardBg,
+              borderRadius: BorderRadius.circular(20),
             ),
-            child:
-                const Icon(Icons.business, color: AppColors.primary, size: 20),
-          ),
-          const SizedBox(width: 10),
-          const Text(
-            '${AppConstants.buildingName} (IT)',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const Spacer(),
-          // Floor display (changeable)
-          GestureDetector(
-            onTap: _showFloorPicker,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.cardBg,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.primaryLight, width: 1),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Floor $_displayedFloor',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _modeButton(
+                    label: 'Manual',
+                    icon: Icons.touch_app,
+                    selected: state.mode == NavigationMode.manual,
+                    onTap: () => ref
+                        .read(navigationProvider.notifier)
+                        .setMode(NavigationMode.manual),
                   ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.chevron_right,
-                      color: AppColors.primary, size: 18),
-                ],
-              ),
+                ),
+                Expanded(
+                  child: _modeButton(
+                    label: 'Live (WiFi)',
+                    icon: Icons.wifi,
+                    selected: state.mode == NavigationMode.live,
+                    onTap: () {
+                      ref
+                          .read(navigationProvider.notifier)
+                          .setMode(NavigationMode.live);
+                      _onStartLive();
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMap(NavigationState navState, FloorConfig config) {
-    return FloorMapView(
-      floorConfig: config,
-      pathPoints: navState.path?.path,
-      // User marker only if user location is on the displayed floor
-      userX: (navState.userLocation?.floor == _displayedFloor)
-          ? navState.userLocation?.x
-          : null,
-      userY: (navState.userLocation?.floor == _displayedFloor)
-          ? navState.userLocation?.y
-          : null,
-      // Destination marker only if destination is on the displayed floor
-      destX: (widget.destination.floor == _displayedFloor)
-          ? widget.destination.x
-          : null,
-      destY: (widget.destination.floor == _displayedFloor)
-          ? widget.destination.y
-          : null,
-      userRoomNumber:
-          navState.userLocation?.roomNumber ?? navState.userLocation?.name,
-      destRoomNumber: widget.destination.roomNumber ?? widget.destination.name,
-    );
-  }
-
-  // ===== Bottom panel with location cards + start button =====
-  Widget _buildBottomPanel(NavigationState navState) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        decoration: BoxDecoration(
-          color: AppColors.background.withValues(alpha: 0.96),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.14),
-              blurRadius: 22,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // "You Are Here" card
-            _LocationCard(
-              label: 'You Are Here',
-              value: navState.userLocation?.name ?? 'Tap to set your location',
-              isPlaceholder: navState.userLocation == null,
-              onTap: _showLocationPicker,
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: navState.isLocating
-                    ? null
-                    : () async {
-                        await ref
-                            .read(navigationProvider.notifier)
-                            .locateFromWifi();
-                        final location =
-                            ref.read(navigationProvider).userLocation;
-                        if (mounted && location != null) {
-                          setState(() => _displayedFloor = location.floor);
-                        }
-                      },
-                icon: navState.isLocating
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.wifi_tethering),
-                label: Text(navState.isLocating
-                    ? 'Locating...'
-                    : 'Use Live Indoor Location'),
-              ),
-            ),
-            const SizedBox(height: 10),
-            // "Your destination is" card
-            _LocationCard(
-              label: 'Your destination is',
-              value: widget.destination.name,
-              isPlaceholder: false,
-              onTap: null,
-            ),
-            const SizedBox(height: 16),
-            // Start Navigation button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: navState.isCalculating || !navState.isReady
-                    ? null
-                    : () {
-                        ref.read(navigationProvider.notifier).calculatePath();
-                      },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  disabledBackgroundColor:
-                      AppColors.accent.withValues(alpha: 0.4),
+          // Status row (مختصرة)
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(Icons.my_location,
+                  color: AppColors.accent, size: 16),
+              const SizedBox(width: 4),
+              Expanded(child: _currentLocationText(state)),
+              const Icon(Icons.location_on,
+                  color: AppColors.error, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                widget.destination.roomNumber ?? widget.destination.name,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
                 ),
-                child: navState.isCalculating
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(
-                          color: AppColors.white,
-                          strokeWidth: 2.5,
-                        ),
-                      )
-                    : Text(
-                        navState.path != null
-                            ? 'Recalculate'
-                            : 'Start Navigation',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
               ),
-            ),
-            // Error message
-            if (navState.error != null) ...[
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.all(10),
+            ],
+          ),
+          if (state.error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -266,369 +292,322 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
                 child: Row(
                   children: [
                     const Icon(Icons.error_outline,
-                        color: AppColors.error, size: 18),
-                    const SizedBox(width: 8),
+                        color: AppColors.error, size: 14),
+                    const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        navState.error!,
+                        state.error!,
                         style: const TextStyle(
-                            color: AppColors.error, fontSize: 12),
+                            color: AppColors.error, fontSize: 11),
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-            // Path info (distance + steps)
-            if (navState.path != null && navState.path!.success) ...[
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _InfoChip(
-                    icon: Icons.straighten,
-                    label: '${navState.path!.distance.toStringAsFixed(1)}m',
-                  ),
-                  const SizedBox(width: 12),
-                  _InfoChip(
-                    icon: Icons.directions_walk,
-                    label: '${navState.path!.steps} steps',
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ===== Floor picker bottom sheet =====
-  void _showFloorPicker() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Select Floor to View',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            ...FloorConfigs.all.map((floor) {
-              final isSelected = floor.floor == _displayedFloor;
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor:
-                      isSelected ? AppColors.primary : AppColors.cardBg,
-                  child: Text(
-                    '${floor.floor}',
-                    style: TextStyle(
-                      color: isSelected ? AppColors.white : AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                title: Text(floor.name),
-                trailing: isSelected
-                    ? const Icon(Icons.check, color: AppColors.primary)
-                    : null,
-                onTap: () {
-                  setState(() => _displayedFloor = floor.floor);
-                  Navigator.pop(context);
-                },
-              );
-            }),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ===== Location picker bottom sheet =====
-  void _showLocationPicker() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.white,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) => _LocationPickerSheet(
-          scrollController: scrollController,
-          onSelected: (room) {
-            ref.read(navigationProvider.notifier).setUserLocation(room);
-            setState(() => _displayedFloor = room.floor);
-            Navigator.pop(context);
-          },
-        ),
-      ),
-    );
-  }
-}
-
-// =============================================
-// Location card widget
-// =============================================
-class _LocationCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool isPlaceholder;
-  final VoidCallback? onTap;
-
-  const _LocationCard({
-    required this.label,
-    required this.value,
-    required this.isPlaceholder,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.cardBg,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  const Icon(Icons.location_on,
-                      color: AppColors.primary, size: 18),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      value,
-                      style: TextStyle(
-                        color: isPlaceholder
-                            ? AppColors.textLight
-                            : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        fontStyle:
-                            isPlaceholder ? FontStyle.italic : FontStyle.normal,
-                      ),
-                    ),
-                  ),
-                  if (onTap != null)
-                    const Icon(Icons.edit,
-                        color: AppColors.textLight, size: 16),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// =============================================
-// Info chip (distance, steps)
-// =============================================
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _InfoChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.cardBg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: AppColors.primary, size: 16),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
         ],
       ),
     );
   }
-}
 
-// =============================================
-// Location picker - bottom sheet to choose "I am here"
-// =============================================
-class _LocationPickerSheet extends ConsumerStatefulWidget {
-  final ScrollController scrollController;
-  final void Function(Room) onSelected;
-
-  const _LocationPickerSheet({
-    required this.scrollController,
-    required this.onSelected,
-  });
-
-  @override
-  ConsumerState<_LocationPickerSheet> createState() =>
-      _LocationPickerSheetState();
-}
-
-class _LocationPickerSheetState extends ConsumerState<_LocationPickerSheet> {
-  int _selectedFloor = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final roomsAsync = ref.watch(roomsByFloorProvider(_selectedFloor));
-
-    return Column(
-      children: [
-        const SizedBox(height: 12),
-        Container(
-          width: 40,
-          height: 4,
-          decoration: BoxDecoration(
-            color: AppColors.border,
-            borderRadius: BorderRadius.circular(2),
-          ),
+  Widget _modeButton({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: selected ? AppColors.accent : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
         ),
-        const SizedBox(height: 12),
-        const Text(
-          'Where Are You?',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Pick the room closest to your location',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-        ),
-        const SizedBox(height: 16),
-        // Floor tabs
-        SizedBox(
-          height: 40,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: FloorConfigs.all.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, i) {
-              final floor = FloorConfigs.all[i];
-              final isSelected = floor.floor == _selectedFloor;
-              return GestureDetector(
-                onTap: () => setState(() => _selectedFloor = floor.floor),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary : AppColors.cardBg,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'Floor ${floor.floor}',
-                    style: TextStyle(
-                      color: isSelected ? AppColors.white : AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 12),
-        // Room list
-        Expanded(
-          child: roomsAsync.when(
-            loading: () => const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,
+                size: 16,
+                color: selected ? AppColors.white : AppColors.textSecondary),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? AppColors.white : AppColors.textSecondary,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
             ),
-            error: (err, _) => Center(
-              child: Text('Error: $err',
-                  style: const TextStyle(color: AppColors.error)),
-            ),
-            data: (rooms) => ListView.separated(
-              controller: widget.scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: rooms.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, i) {
-                final room = rooms[i];
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                    child: Icon(
-                      _getIconForType(room.type),
-                      color: AppColors.primary,
-                      size: 20,
-                    ),
-                  ),
-                  title: Text(
-                    room.name,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(room.typeLabel),
-                  trailing: const Icon(Icons.chevron_right,
-                      color: AppColors.textLight),
-                  onTap: () => widget.onSelected(room),
-                );
-              },
-            ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
-  IconData _getIconForType(String type) {
-    switch (type) {
-      case 'office':
-        return Icons.business_center;
-      case 'lab':
-        return Icons.computer_outlined;
-      case 'classroom':
-        return Icons.school;
-      case 'bathroom':
-        return Icons.wc;
-      default:
-        return Icons.meeting_room;
+  Widget _currentLocationText(NavigationState state) {
+    if (state.mode == NavigationMode.manual) {
+      if (state.userLocation == null) {
+        return GestureDetector(
+          onTap: _onPickManualLocation,
+          child: const Text(
+            'Tap to set your location',
+            style: TextStyle(
+              color: AppColors.accent,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+        );
+      }
+      return GestureDetector(
+        onTap: _onPickManualLocation,
+        child: Text(
+          '${state.userLocation!.roomNumber} (F${state.userLocation!.floor})',
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w500,
+            fontSize: 13,
+          ),
+        ),
+      );
+    } else {
+      if (state.liveX == null) {
+        return Text(
+          state.scanStatus ?? 'Scanning...',
+          style: const TextStyle(
+              color: AppColors.textSecondary, fontSize: 12),
+        );
+      }
+      final smoothedIcon = state.liveSmoothed ? ' 🛡️' : '';
+      return Text(
+        '${state.liveZone} (F${state.liveFloor}) '
+        '${((state.liveConfidence ?? 0) * 100).toInt()}%$smoothedIcon',
+        style: const TextStyle(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w500,
+          fontSize: 12,
+        ),
+      );
     }
+  }
+
+  // ═══════════════════════════════════════════════════
+  // Floor tabs
+  // ═══════════════════════════════════════════════════
+  Widget _buildFloorTabs(NavigationState state) {
+    final floorsInRoute =
+        state.path!.path.map((p) => p.floor).toSet().toList()..sort();
+    if (floorsInRoute.length < 2) return const SizedBox.shrink();
+
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: floorsInRoute.length,
+        itemBuilder: (_, i) {
+          final fl = floorsInRoute[i];
+          final selected = fl == _displayedFloor;
+          return Padding(
+            padding: const EdgeInsets.only(right: 6, top: 4),
+            child: ChoiceChip(
+              label: Text('F$fl', style: const TextStyle(fontSize: 12)),
+              selected: selected,
+              onSelected: (_) => setState(() => _displayedFloor = fl),
+              selectedColor: AppColors.primary,
+              labelStyle: TextStyle(
+                color: selected ? AppColors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════
+  // Map — يأخذ كل المساحة المتاحة
+  // ═══════════════════════════════════════════════════
+  Widget _buildMap(NavigationState state) {
+    final cfg = FloorConfigs.forFloor(_displayedFloor);
+
+    double? userX, userY;
+    double? destX, destY;
+
+    // ─── Source marker: nearest corridor node (first path point on user's floor) ───
+    // When a pixel-accurate path exists, the first point on the user's starting floor
+    // is a corridor node — exactly where the marker should appear.
+    final userFloor = state.currentFloor;
+    if (state.path != null &&
+        state.path!.path.isNotEmpty &&
+        userFloor == _displayedFloor) {
+      final firstOnFloor = state.path!.path
+          .where((p) => p.floor == _displayedFloor)
+          .toList();
+      if (firstOnFloor.isNotEmpty) {
+        userX = firstOnFloor.first.x;
+        userY = firstOnFloor.first.y;
+      }
+    }
+    // Fallback when no path yet: show at room door from RoomPixels
+    if (userX == null) {
+      if (state.userLocation != null &&
+          state.userLocation!.floor == _displayedFloor) {
+        final rn = state.userLocation!.roomNumber;
+        if (rn != null) {
+          final p = RoomPixels.get(_displayedFloor, rn);
+          if (p != null) { userX = p.$1; userY = p.$2; }
+        }
+      } else if (state.mode == NavigationMode.live &&
+          state.liveZone != null &&
+          state.liveFloor == _displayedFloor) {
+        final num = state.liveZone!.replaceAll(RegExp(r'[a-zA-Z_]'), '');
+        if (num.isNotEmpty) {
+          final p = RoomPixels.get(_displayedFloor, num);
+          if (p != null) { userX = p.$1; userY = p.$2; }
+        }
+      }
+    }
+
+    // ─── Destination marker: always on the room door ───
+    if (widget.destination.floor == _displayedFloor) {
+      final roomNumber = widget.destination.roomNumber;
+      if (roomNumber != null) {
+        final p = RoomPixels.get(_displayedFloor, roomNumber);
+        if (p != null) {
+          destX = p.$1;
+          destY = p.$2;
+        }
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: FloorMapView(
+        floorConfig: cfg,
+        pathPoints: state.path?.path,
+        userX: userX,
+        userY: userY,
+        destX: destX,
+        destY: destY,
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════
+  // Bottom bar: action button + distance info
+  // ═══════════════════════════════════════════════════
+  Widget _buildBottomBar(NavigationState state) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        border: Border(
+          top: BorderSide(color: AppColors.textLight.withValues(alpha: 0.2)),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (state.path != null && state.path!.success) ...[
+            Row(
+              children: [
+                const Icon(Icons.straighten,
+                    size: 14, color: AppColors.primary),
+                const SizedBox(width: 4),
+                Text(
+                  '${state.path!.distance.toStringAsFixed(0)}m',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Icon(Icons.directions_walk,
+                    size: 14, color: AppColors.primary),
+                const SizedBox(width: 4),
+                Text(
+                  '${state.path!.steps} pts',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                    fontSize: 12,
+                  ),
+                ),
+                const Spacer(),
+                if (state.path!.instructions.isNotEmpty)
+                  Flexible(
+                    child: Text(
+                      state.path!.instructions.first.text,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+          ],
+          _buildActionButton(state),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(NavigationState state) {
+    if (state.isCalculating) {
+      return const SizedBox(
+        height: 40,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (state.mode == NavigationMode.manual && state.userLocation == null) {
+      return SizedBox(
+        height: 40,
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: _onPickManualLocation,
+          icon: const Icon(Icons.my_location, size: 18),
+          label: const Text('Set My Location'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.white,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 40,
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: state.hasLocation ? _onStartNavigation : null,
+        icon: const Icon(Icons.navigation, size: 18),
+        label: Text(
+          state.path != null ? 'Recalculate' : 'Start Navigation',
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.accent,
+          foregroundColor: AppColors.white,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20)),
+        ),
+      ),
+    );
   }
 }
