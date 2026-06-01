@@ -108,7 +108,13 @@ class _EventCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/event', extra: event),
+        onTap: () => context.push(
+          '/event',
+          extra: {
+            'event': event,
+            'showDirections': true,
+          },
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(

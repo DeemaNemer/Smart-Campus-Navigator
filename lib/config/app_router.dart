@@ -133,8 +133,15 @@ class AppRouter {
       GoRoute(
         path: '/event',
         builder: (context, state) {
-          final event = state.extra as Event;
-          return EventDetailsScreen(event: event);
+          final extra = state.extra;
+          if (extra is Map<String, dynamic>) {
+            return EventDetailsScreen(
+              event: extra['event'] as Event,
+              showDirections: extra['showDirections'] as bool? ?? false,
+            );
+          }
+
+          return EventDetailsScreen(event: extra as Event);
         },
       ),
       // Navigation

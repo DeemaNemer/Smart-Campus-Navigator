@@ -66,10 +66,15 @@ class SearchNotifier extends StateNotifier<SearchState> {
     );
 
     try {
-      final results = await _api.search(
-        cleanQuery,
-        category: selectedCategory,
-      );
+      final results = cleanQuery.isEmpty && selectedCategory != null
+          ? await _loadCategoryResults(selectedCategory)
+          : _filterByCategory(
+              await _api.search(
+                cleanQuery,
+                category: selectedCategory,
+              ),
+              selectedCategory,
+            );
       state = state.copyWith(
         results: results,
         isLoading: false,
@@ -94,6 +99,35 @@ class SearchNotifier extends StateNotifier<SearchState> {
       clearError: true,
       clearCategory: category == null,
     );
+  }
+
+  Future<List<SearchResult>> _loadCategoryResults(String category) async {
+    if (category == 'professor') {
+      final professors = await _api.getProfessors();
+      return professors.map(SearchResult.professor).toList();
+    }
+
+    final rooms = await _api.getRooms();
+    return rooms
+        .where((room) => room.type == category)
+        .map(SearchResult.room)
+        .toList();
+  }
+
+  List<SearchResult> _filterByCategory(
+    List<SearchResult> results,
+    String? category,
+  ) {
+    if (category == null || category.isEmpty) return results;
+
+    return results.where((result) {
+      if (category == 'professor') {
+        return result.type == SearchResultType.professor;
+      }
+
+      return result.type == SearchResultType.room &&
+          result.room?.type == category;
+    }).toList();
   }
 }
 

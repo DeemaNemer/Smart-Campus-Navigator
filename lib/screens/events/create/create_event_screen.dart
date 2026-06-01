@@ -8,6 +8,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/events_provider.dart';
 import '../../../providers/rooms_provider.dart';
 import '../../../services/api_service.dart';
+import '../../../services/manual_event_location_store.dart';
 import '../../../widgets/common/birzeit_logo_mark.dart';
 import '../../../widgets/common/system_message.dart';
 
@@ -146,13 +147,20 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
     try {
       final api = ApiService();
+      final manualLocation = _customLocationController.text.trim();
+      final locationRoomId =
+          _selectedRoom?.id ?? await _fallbackEventRoomId(api);
+
+      if (locationRoomId == null) {
+        throw 'Could not prepare a campus location for this event.';
+      }
 
       final dateStr =
           '${_selectedDate!.year.toString().padLeft(4, '0')}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
       final timeStr =
           '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}';
 
-      await api.createEvent(
+      final result = await api.createEvent(
         token: auth.token!,
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim().isEmpty
@@ -160,16 +168,20 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
             : _descriptionController.text.trim(),
         date: dateStr,
         time: timeStr,
-        locationRoomId: _selectedRoom?.id,
-        locationText: _customLocationController.text.trim().isEmpty
-            ? null
-            : _customLocationController.text.trim(),
+        locationRoomId: locationRoomId,
+        locationText: manualLocation.isEmpty ? null : manualLocation,
         targetAudience: _targetAudience,
       );
 
-      // Refresh events list
+      if (manualLocation.isNotEmpty) {
+        final eventData = result['event'];
+        final eventId = eventData is Map ? eventData['id'] as int? : null;
+        if (eventId != null) {
+          await ManualEventLocationStore.save(eventId, manualLocation);
+        }
+      }
+
       ref.invalidate(myEventsProvider);
-      ref.invalidate(eventsProvider);
 
       if (!mounted) return;
 
@@ -178,6 +190,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
         message: 'Your event will be reviewed by an admin before publishing',
         icon: Icons.info_outline,
         color: AppColors.info,
+        duration: const Duration(seconds: 2),
       );
       context.pop();
     } catch (e) {
@@ -186,6 +199,14 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
         _error = e.toString();
       });
     }
+  }
+
+  Future<int?> _fallbackEventRoomId(ApiService api) async {
+    final rooms = await api.getRooms();
+    if (rooms.isEmpty) return null;
+
+    final preferredRooms = rooms.where((room) => room.type != 'bathroom');
+    return (preferredRooms.isNotEmpty ? preferredRooms.first : rooms.first).id;
   }
 
   @override

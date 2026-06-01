@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/event.dart';
 import '../services/api_service.dart';
+import '../services/manual_event_location_store.dart';
 import 'auth_provider.dart';
 
 // ============================================
@@ -18,7 +19,12 @@ final eventsProvider = FutureProvider<List<Event>>((ref) async {
     if (type == 'employee') target = 'employees';
   }
 
-  return api.getEvents(target: target);
+  final events = await ManualEventLocationStore.apply(
+    await api.getEvents(target: target),
+  );
+  return events
+      .where((event) => event.status == EventStatus.approved && event.isActive)
+      .toList();
 });
 
 // ============================================
@@ -29,7 +35,7 @@ final myEventsProvider = FutureProvider<List<Event>>((ref) async {
   final auth = ref.watch(authProvider);
 
   if (auth.token == null) return [];
-  return api.getMyEvents(auth.token!);
+  return ManualEventLocationStore.apply(await api.getMyEvents(auth.token!));
 });
 
 // ============================================
@@ -42,7 +48,7 @@ final pendingEventsProvider = FutureProvider<List<Event>>((ref) async {
   if (auth.token == null || !(auth.user?.isAdmin ?? false)) {
     return [];
   }
-  return api.getPendingEvents(auth.token!);
+  return ManualEventLocationStore.apply(await api.getPendingEvents(auth.token!));
 });
 
 // ============================================

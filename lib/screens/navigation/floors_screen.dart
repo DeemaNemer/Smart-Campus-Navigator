@@ -17,6 +17,7 @@ import '../../models/room.dart';
 import '../../models/professor.dart';
 import '../../models/search_result.dart';
 import '../../services/api_service.dart';
+import '../../widgets/common/system_message.dart';
 import '../../widgets/map/floor_map_view.dart';
 
 class FloorsScreen extends ConsumerStatefulWidget {
@@ -83,8 +84,11 @@ class _FloorsScreenState extends ConsumerState<FloorsScreen> {
         prof.x == null ||
         prof.y == null ||
         prof.floor == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Professor office not available')),
+      showSystemMessage(
+        context,
+        message: 'Professor office is not available.',
+        icon: Icons.info_outline,
+        color: AppColors.info,
       );
       return;
     }
@@ -103,11 +107,11 @@ class _FloorsScreenState extends ConsumerState<FloorsScreen> {
 
   void _onStart() {
     if (_selectedDestination == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a destination first'),
-          backgroundColor: AppColors.warning,
-        ),
+      showSystemMessage(
+        context,
+        message: 'Please select a destination first.',
+        icon: Icons.info_outline,
+        color: AppColors.warning,
       );
       return;
     }
@@ -143,61 +147,32 @@ class _FloorsScreenState extends ConsumerState<FloorsScreen> {
   // Search Bar (top)
   // ═══════════════════════════════════════════════════
   Widget _buildSearchBar() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-      color: AppColors.background,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(left: 16),
-              child:
-                  Icon(Icons.search, color: AppColors.textSecondary, size: 22),
-            ),
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                onChanged: _onSearch,
-                onTap: () {
-                  if (_searchController.text.isNotEmpty) {
-                    setState(() => _showResultsList = true);
-                  }
-                },
-                decoration: const InputDecoration(
-                  hintText: 'Search destination (room, professor)...',
-                  hintStyle:
-                      TextStyle(color: AppColors.textLight, fontSize: 14),
-                  border: InputBorder.none,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
+      child: TextField(
+        controller: _searchController,
+        onChanged: _onSearch,
+        onTap: () {
+          if (_searchController.text.isNotEmpty) {
+            setState(() => _showResultsList = true);
+          }
+        },
+        decoration: InputDecoration(
+          hintText: 'Search destination (room, professor)...',
+          prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+          suffixIcon: _searchController.text.isEmpty
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchResults = [];
+                      _showResultsList = false;
+                      _selectedDestination = null;
+                    });
+                  },
                 ),
-              ),
-            ),
-            if (_searchController.text.isNotEmpty)
-              IconButton(
-                icon: const Icon(Icons.close,
-                    color: AppColors.textSecondary, size: 20),
-                onPressed: () {
-                  _searchController.clear();
-                  setState(() {
-                    _searchResults = [];
-                    _showResultsList = false;
-                    _selectedDestination = null;
-                  });
-                },
-              ),
-          ],
         ),
       ),
     );
@@ -251,7 +226,7 @@ class _FloorsScreenState extends ConsumerState<FloorsScreen> {
               child: Icon(Icons.person, color: AppColors.white, size: 20),
             ),
             title: Text(prof.nameEn),
-            subtitle: Text(prof.department ?? 'Professor'),
+            subtitle: Text(prof.officeDisplay),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _selectProfessor(prof),
           );

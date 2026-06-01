@@ -110,6 +110,40 @@ class Event {
     );
   }
 
+  Event copyWith({
+    String? locationText,
+    int? locationRoomId,
+    String? roomNumber,
+    int? floor,
+    double? x,
+    double? y,
+  }) {
+    return Event(
+      id: id,
+      title: title,
+      description: description,
+      date: date,
+      time: time,
+      locationRoomId: locationRoomId ?? this.locationRoomId,
+      locationText: locationText ?? this.locationText,
+      posterUrl: posterUrl,
+      isActive: isActive,
+      status: status,
+      targetAudience: targetAudience,
+      createdByUserId: createdByUserId,
+      adminNotes: adminNotes,
+      createdAt: createdAt,
+      reviewedAt: reviewedAt,
+      creatorUsername: creatorUsername,
+      creatorName: creatorName,
+      creatorEmail: creatorEmail,
+      roomNumber: roomNumber ?? this.roomNumber,
+      floor: floor ?? this.floor,
+      x: x ?? this.x,
+      y: y ?? this.y,
+    );
+  }
+
   String get locationDisplay {
     if (locationText != null && locationText!.trim().isNotEmpty) {
       return locationText!;

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../config/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/common/system_message.dart';
 
 class VerifyEmailScreen extends ConsumerStatefulWidget {
   final String email;
@@ -35,8 +36,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
 
   Future<void> _handleVerify() async {
     if (_code.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter all 6 digits')),
+      showSystemMessage(
+        context,
+        message: 'Please enter all 6 digits.',
+        icon: Icons.info_outline,
+        color: AppColors.warning,
       );
       return;
     }
@@ -60,11 +64,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     if (!mounted) return;
 
     if (result != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('New code sent to your email'),
-          backgroundColor: AppColors.success,
-        ),
+      showSystemMessage(
+        context,
+        message: 'A new code was sent to your email.',
+        icon: Icons.check_circle_outline,
+        color: AppColors.success,
       );
       // Clear the boxes
       for (final c in _controllers) {
@@ -81,10 +85,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: const Text('Verify Email'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
         ),
       ),

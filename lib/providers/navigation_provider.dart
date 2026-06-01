@@ -164,6 +164,11 @@ class NavigationNotifier extends StateNotifier<NavigationState> {
     );
   }
 
+  void startNavigationTo(Room dest) {
+    _stopLiveLoop();
+    state = NavigationState(destination: dest);
+  }
+
   // ═══════════════════════════════════════════════════
   // Manual mode (نفس القديم)
   // ═══════════════════════════════════════════════════
@@ -347,6 +352,10 @@ class NavigationNotifier extends StateNotifier<NavigationState> {
   void reset() {
     _stopLiveLoop();
     state = NavigationState();
+  }
+
+  void stopLiveUpdates() {
+    _stopLiveLoop();
   }
 
   @override

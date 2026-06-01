@@ -9,13 +9,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/events_provider.dart';
 import '../../services/api_service.dart';
+import '../../services/manual_event_location_store.dart';
 import '../../widgets/common/system_message.dart';
 import '../../config/campus_buildings.dart';
 
 class EventDetailsScreen extends ConsumerWidget {
   final Event event;
+  final bool showDirections;
 
-  const EventDetailsScreen({super.key, required this.event});
+  const EventDetailsScreen({
+    super.key,
+    required this.event,
+    this.showDirections = false,
+  });
 
   String _formatDate(String dateStr) {
     try {
@@ -48,6 +54,7 @@ class EventDetailsScreen extends ConsumerWidget {
   }
 
   bool get _hasIndoorLocation =>
+      event.locationText == null &&
       event.roomNumber != null &&
       event.x != null &&
       event.y != null &&
@@ -62,17 +69,7 @@ class EventDetailsScreen extends ConsumerWidget {
     final normalized = _normalizeLocationText(text);
 
     for (final building in CampusBuildings.all) {
-      final aliases = <String>[
-        building.id,
-        building.nameEn,
-        building.nameAr,
-        building.description ?? '',
-        if (building.id == 'najjad_zani') 'najjad zani',
-        if (building.id == 'najjad_zani') 'najad zeni',
-        if (building.id == 'najjad_zani') 'najad zani',
-        if (building.id == 'masri') 'it building',
-        if (building.id == 'masri') 'information technology',
-      ];
+      final aliases = _aliasesForBuilding(building);
       if (aliases
           .map(_normalizeLocationText)
           .any((alias) => alias.isNotEmpty && normalized.contains(alias))) {
@@ -80,6 +77,36 @@ class EventDetailsScreen extends ConsumerWidget {
       }
     }
     return null;
+  }
+
+  List<String> _aliasesForBuilding(CampusBuilding building) {
+    return [
+      building.id,
+      building.id.replaceAll('_', ' '),
+      building.nameEn,
+      building.nameAr,
+      building.description ?? '',
+      if (building.id == 'najjad_zani') ...[
+        'najjad zani',
+        'najad zani',
+        'najad zeni',
+        'najjad zeni',
+        'zani center',
+      ],
+      if (building.id == 'masri') ...[
+        'it building',
+        'information technology',
+        'munib masri',
+        'muneeb masri',
+        'mounib masri',
+      ],
+      if (building.id == 'library') 'library',
+      if (building.id == 'main_cafeteria') 'cafeteria',
+      if (building.id == 'clinic') 'clinic',
+      if (building.id == 'stadium') 'stadium',
+      if (building.id == 'gymnasium') 'gym',
+      if (building.id == 'administration') 'administration',
+    ];
   }
 
   String _normalizeLocationText(String value) {
@@ -122,7 +149,11 @@ class EventDetailsScreen extends ConsumerWidget {
                   if (_shouldShowAdminActions(ref))
                     _buildAdminActions(context, ref),
                   if (_shouldShowAdminActions(ref)) const SizedBox(height: 16),
-                  if (_hasNavigableLocation) _buildNavigateButton(context),
+                  if (_shouldShowAdminDelete(ref))
+                    _buildAdminDeleteButton(context, ref),
+                  if (_shouldShowAdminDelete(ref)) const SizedBox(height: 16),
+                  if (showDirections && _hasNavigableLocation)
+                    _buildNavigateButton(context),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -137,7 +168,7 @@ class EventDetailsScreen extends ConsumerWidget {
     return SliverAppBar(
       expandedHeight: 220,
       pinned: true,
-      backgroundColor: AppColors.accent,
+      backgroundColor: AppColors.primary,
       foregroundColor: AppColors.white,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new_rounded),
@@ -196,7 +227,7 @@ class EventDetailsScreen extends ConsumerWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.accent, AppColors.accentDark],
+          colors: [AppColors.primary, AppColors.primaryDark],
         ),
       ),
       child: Center(
@@ -406,6 +437,11 @@ class EventDetailsScreen extends ConsumerWidget {
     return event.status == EventStatus.pending;
   }
 
+  bool _shouldShowAdminDelete(WidgetRef ref) {
+    final user = ref.read(authProvider).user;
+    return user?.isAdmin ?? false;
+  }
+
   Widget _buildAdminActions(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -495,7 +531,7 @@ class EventDetailsScreen extends ConsumerWidget {
       if (context.mounted) {
         showSystemMessage(
           context,
-          message: 'Event approved',
+          message: 'Event approved and published.',
           icon: Icons.check_circle_outline,
           color: AppColors.success,
         );
@@ -505,7 +541,7 @@ class EventDetailsScreen extends ConsumerWidget {
       if (context.mounted) {
         showSystemMessage(
           context,
-          message: 'Failed: $e',
+          message: 'Could not approve event: $e',
           icon: Icons.error_outline,
           color: AppColors.error,
         );
@@ -540,7 +576,7 @@ class EventDetailsScreen extends ConsumerWidget {
       if (context.mounted) {
         showSystemMessage(
           context,
-          message: 'Event rejected',
+          message: 'Event rejected.',
           icon: Icons.cancel_outlined,
           color: AppColors.error,
         );
@@ -550,7 +586,83 @@ class EventDetailsScreen extends ConsumerWidget {
       if (context.mounted) {
         showSystemMessage(
           context,
-          message: 'Failed: $e',
+          message: 'Could not reject event: $e',
+          icon: Icons.error_outline,
+          color: AppColors.error,
+        );
+      }
+    }
+  }
+
+  Widget _buildAdminDeleteButton(BuildContext context, WidgetRef ref) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: () => _handleDelete(context, ref),
+        icon: const Icon(Icons.delete_outline),
+        label: const Text('Delete Event'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.error,
+          side: const BorderSide(color: AppColors.error),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleDelete(BuildContext context, WidgetRef ref) async {
+    final auth = ref.read(authProvider);
+    if (auth.token == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Event'),
+        content: Text('Delete "${event.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ApiService().deleteEvent(auth.token!, event.id);
+      await ManualEventLocationStore.remove(event.id);
+
+      ref.invalidate(pendingEventsProvider);
+      ref.invalidate(eventsStatsProvider);
+      ref.invalidate(eventsProvider);
+      ref.invalidate(myEventsProvider);
+
+      if (context.mounted) {
+        showSystemMessage(
+          context,
+          message: 'Event deleted.',
+          icon: Icons.check_circle_outline,
+          color: AppColors.success,
+        );
+        context.pop();
+      }
+    } catch (error) {
+      if (context.mounted) {
+        showSystemMessage(
+          context,
+          message: 'Could not delete event: $error',
           icon: Icons.error_outline,
           color: AppColors.error,
         );

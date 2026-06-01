@@ -6,7 +6,9 @@ import '../../../models/event.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/events_provider.dart';
 import '../../../services/api_service.dart';
+import '../../../services/manual_event_location_store.dart';
 import '../../../widgets/common/birzeit_logo_mark.dart';
+import '../../../widgets/common/system_message.dart';
 
 class MyEventsScreen extends ConsumerWidget {
   const MyEventsScreen({super.key});
@@ -18,7 +20,7 @@ class MyEventsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Smart Campus Navigator'),
+        title: const Text('My Events'),
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 10),
@@ -302,67 +304,27 @@ class _MyEventCard extends StatelessWidget {
 
     try {
       await ApiService().deleteEvent(auth.token!, event.id);
+      await ManualEventLocationStore.remove(event.id);
       ref.invalidate(myEventsProvider);
       ref.invalidate(eventsProvider);
 
       if (context.mounted) {
-        _showSystemMessage(context, 'Event deleted');
+        showSystemMessage(
+          context,
+          message: 'Event deleted.',
+          icon: Icons.check_circle_outline,
+          color: AppColors.success,
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        _showSystemMessage(context, 'Failed to delete: $e', isError: true);
+        showSystemMessage(
+          context,
+          message: 'Could not delete event: $e',
+          icon: Icons.error_outline,
+          color: AppColors.error,
+        );
       }
     }
-  }
-
-  Future<void> _showSystemMessage(
-    BuildContext context,
-    String message, {
-    bool isError = false,
-  }) {
-    return showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isDismissible: true,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 16,
-                  offset: Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(
-                    isError ? Icons.error_outline : Icons.info_outline,
-                    color: isError ? AppColors.error : AppColors.info,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      message,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

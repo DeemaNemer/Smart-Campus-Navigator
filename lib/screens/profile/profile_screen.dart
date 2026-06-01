@@ -28,7 +28,8 @@ class ProfileScreen extends ConsumerWidget {
           _QuickActions(user: user),
           const SizedBox(height: 14),
           _SettingsActions(user: user),
-          const SizedBox(height: 18),
+          SizedBox(height: user == null ? 42 : 18),
+          if (user == null) const _BackToLoginButton(),
           if (user != null) _SignOutButton(ref: ref),
         ],
       ),
@@ -375,5 +376,37 @@ class _SignOutButton extends StatelessWidget {
       await ref.read(authProvider.notifier).logout();
       if (context.mounted) context.go('/login');
     }
+  }
+}
+
+class _BackToLoginButton extends StatelessWidget {
+  const _BackToLoginButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () => context.go('/login'),
+        icon: const Icon(Icons.login, color: AppColors.white, size: 20),
+        label: const Text(
+          'Back to Login Page',
+          style: TextStyle(
+            color: AppColors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+          elevation: 0,
+          minimumSize: const Size.fromHeight(54),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+      ),
+    );
   }
 }

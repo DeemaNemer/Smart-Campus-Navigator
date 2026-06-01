@@ -6,7 +6,9 @@ import '../../../models/event.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/events_provider.dart';
 import '../../../services/api_service.dart';
+import '../../../services/manual_event_location_store.dart';
 import '../../../widgets/common/birzeit_logo_mark.dart';
+import '../../../widgets/common/system_message.dart';
 
 // Filter type for admin event listing
 enum AdminFilter { pending, approved, rejected }
@@ -17,7 +19,9 @@ final adminFilteredEventsProvider =
   if (auth.token == null || !(auth.user?.isAdmin ?? false)) return [];
 
   final api = ApiService();
-  return api.getEventsByStatus(auth.token!, filter.name);
+  return ManualEventLocationStore.apply(
+    await api.getEventsByStatus(auth.token!, filter.name),
+  );
 });
 
 class FilteredEventsScreen extends ConsumerWidget {
@@ -308,10 +312,28 @@ class _AdminEventCard extends ConsumerWidget {
 
     try {
       await ApiService().deleteEvent(auth.token!, event.id);
+      await ManualEventLocationStore.remove(event.id);
       ref.invalidate(adminFilteredEventsProvider(filter));
       ref.invalidate(pendingEventsProvider);
       ref.invalidate(eventsStatsProvider);
       ref.invalidate(eventsProvider);
-    } catch (_) {}
+      if (context.mounted) {
+        showSystemMessage(
+          context,
+          message: 'Event deleted.',
+          icon: Icons.check_circle_outline,
+          color: AppColors.success,
+        );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        showSystemMessage(
+          context,
+          message: 'Could not delete event: $error',
+          icon: Icons.error_outline,
+          color: AppColors.error,
+        );
+      }
+    }
   }
 }

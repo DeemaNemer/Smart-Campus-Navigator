@@ -43,7 +43,7 @@ class ProfessorDetailsScreen extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 240,
       pinned: true,
-      backgroundColor: AppColors.accent,
+      backgroundColor: AppColors.primary,
       foregroundColor: AppColors.white,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new_rounded),
@@ -55,7 +55,7 @@ class ProfessorDetailsScreen extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [AppColors.accent, AppColors.accentDark],
+              colors: [AppColors.primary, AppColors.primaryDark],
             ),
           ),
           child: Center(

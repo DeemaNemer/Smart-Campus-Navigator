@@ -11,6 +11,7 @@ import '../../config/floor_config.dart';
 import '../../models/room.dart';
 import '../../providers/navigation_provider.dart';
 import '../../providers/rooms_provider.dart';
+import '../../widgets/common/system_message.dart';
 import '../../widgets/map/floor_map_view.dart';
 
 class NavigationScreen extends ConsumerStatefulWidget {
@@ -24,36 +25,39 @@ class NavigationScreen extends ConsumerStatefulWidget {
 
 class _NavigationScreenState extends ConsumerState<NavigationScreen> {
   int _displayedFloor = 0;
+  late final NavigationNotifier _navigationNotifier;
 
   @override
   void initState() {
     super.initState();
+    _navigationNotifier = ref.read(navigationProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(navigationProvider.notifier).setDestination(widget.destination);
-      _displayedFloor = widget.destination.floor;
+      if (!mounted) return;
+      _navigationNotifier.startNavigationTo(widget.destination);
+      setState(() => _displayedFloor = widget.destination.floor);
     });
   }
 
   @override
   void dispose() {
-    ref.read(navigationProvider.notifier).reset();
+    _navigationNotifier.stopLiveUpdates();
     super.dispose();
   }
 
   Future<void> _onStartNavigation() async {
-    final notifier = ref.read(navigationProvider.notifier);
     final state = ref.read(navigationProvider);
 
     if (!state.hasLocation) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please set your current location first'),
-          backgroundColor: AppColors.error,
-        ),
+      showSystemMessage(
+        context,
+        message: 'Please set your current location first.',
+        icon: Icons.error_outline,
+        color: AppColors.error,
       );
       return;
     }
-    await notifier.calculatePath();
+    await _navigationNotifier.calculatePath();
+    if (!mounted) return;
     // بعد ما يحسب المسار، خلي الخريطة تعرض طابق الـ source
     final newState = ref.read(navigationProvider);
     if (newState.path != null && newState.path!.path.isNotEmpty) {
@@ -62,23 +66,22 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
   }
 
   Future<void> _onStartLive() async {
-    final ok = await ref.read(navigationProvider.notifier).startLiveMode();
+    final ok = await _navigationNotifier.startLiveMode();
     if (!ok && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to start WiFi scanning. Check permissions.'),
-          backgroundColor: AppColors.error,
-        ),
+      showSystemMessage(
+        context,
+        message: 'Could not start WiFi scanning. Check permissions.',
+        icon: Icons.error_outline,
+        color: AppColors.error,
       );
     }
   }
 
   Future<void> _onPickManualLocation() async {
     final picked = await _showRoomPicker();
-    if (picked != null) {
-      ref.read(navigationProvider.notifier).setUserLocation(picked);
-      setState(() => _displayedFloor = picked.floor);
-    }
+    if (!mounted || picked == null) return;
+    _navigationNotifier.setUserLocation(picked);
+    setState(() => _displayedFloor = picked.floor);
   }
 
   Future<Room?> _showRoomPicker() async {

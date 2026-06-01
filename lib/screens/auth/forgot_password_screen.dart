@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../config/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/common/system_message.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -35,12 +36,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       // For development - show the dev token
       final devToken = result['dev_token'];
       if (devToken != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Dev Token: $devToken'),
-            duration: const Duration(seconds: 8),
-            backgroundColor: AppColors.info,
-          ),
+        showSystemMessage(
+          context,
+          message: 'Dev token: $devToken',
+          icon: Icons.info_outline,
+          color: AppColors.info,
+          duration: const Duration(seconds: 8),
         );
       }
 
@@ -55,10 +56,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: const Text('Forgot Password'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
         ),
       ),

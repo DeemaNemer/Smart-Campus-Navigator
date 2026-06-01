@@ -7,6 +7,7 @@ import '../../../models/event.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/events_provider.dart';
 import '../../../services/api_service.dart';
+import '../../../services/manual_event_location_store.dart';
 import '../../../widgets/common/system_message.dart';
 
 class AdminEventsScreen extends ConsumerWidget {
@@ -53,12 +54,6 @@ class AdminEventsScreen extends ConsumerWidget {
                   error: (error, _) => _StatsError(error: error.toString()),
                   data: (stats) => _StatsPanel(stats: stats),
                 ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: _QuickActions(ref: ref),
               ),
             ),
             SliverToBoxAdapter(
@@ -446,79 +441,6 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _QuickActions extends StatelessWidget {
-  final WidgetRef ref;
-
-  const _QuickActions({required this.ref});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          _AdminActionTile(
-            icon: Icons.pending_actions,
-            title: 'Review pending events',
-            subtitle: 'Approve or reject submitted campus events.',
-            onTap: () => context.push('/events/admin/filter/pending'),
-          ),
-          const Divider(height: 1),
-          _AdminActionTile(
-            icon: Icons.add_circle_outline,
-            title: 'Create event',
-            subtitle: 'Publish a new campus event request.',
-            onTap: () => context.push('/events/create'),
-          ),
-          const Divider(height: 1),
-          _AdminActionTile(
-            icon: Icons.event_available_outlined,
-            title: 'Approved events',
-            subtitle: 'Check events visible to users.',
-            onTap: () => context.push('/events/admin/filter/approved'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AdminActionTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _AdminActionTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.primary),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w800),
-      ),
-      subtitle: Text(
-        subtitle,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: const Icon(Icons.chevron_right, color: AppColors.textLight),
-      onTap: onTap,
-    );
-  }
-}
-
 class _SectionTitle extends StatelessWidget {
   final String title;
   final String actionLabel;
@@ -662,6 +584,17 @@ class _PendingEventCard extends ConsumerWidget {
                       ),
                     ),
                   ),
+                  const SizedBox(width: 10),
+                  IconButton.filledTonal(
+                    tooltip: 'Delete event',
+                    onPressed: () => _handleDelete(context, ref),
+                    icon: const Icon(Icons.delete_outline),
+                    color: AppColors.error,
+                    style: IconButton.styleFrom(
+                      backgroundColor:
+                          AppColors.error.withValues(alpha: 0.1),
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -692,7 +625,7 @@ class _PendingEventCard extends ConsumerWidget {
     await _reviewEvent(
       context,
       ref,
-      successMessage: 'Event approved',
+      successMessage: 'Event approved and published.',
       action: (token) => ApiService().approveEvent(
         token: token,
         eventId: event.id,
@@ -715,7 +648,7 @@ class _PendingEventCard extends ConsumerWidget {
     await _reviewEvent(
       context,
       ref,
-      successMessage: 'Event rejected',
+      successMessage: 'Event rejected.',
       action: (token) => ApiService().rejectEvent(
         token: token,
         eventId: event.id,
@@ -751,7 +684,61 @@ class _PendingEventCard extends ConsumerWidget {
       if (context.mounted) {
         showSystemMessage(
           context,
-          message: 'Failed: $error',
+          message: 'Could not complete review: $error',
+          icon: Icons.error_outline,
+          color: AppColors.error,
+        );
+      }
+    }
+  }
+
+  Future<void> _handleDelete(BuildContext context, WidgetRef ref) async {
+    final token = ref.read(authProvider).token;
+    if (token == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Event'),
+        content: Text('Delete "${event.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await ApiService().deleteEvent(token, event.id);
+      await ManualEventLocationStore.remove(event.id);
+      ref.invalidate(pendingEventsProvider);
+      ref.invalidate(eventsStatsProvider);
+      ref.invalidate(eventsProvider);
+
+      if (context.mounted) {
+        showSystemMessage(
+          context,
+          message: 'Event deleted.',
+          icon: Icons.check_circle_outline,
+          color: AppColors.success,
+        );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        showSystemMessage(
+          context,
+          message: 'Could not delete event: $error',
           icon: Icons.error_outline,
           color: AppColors.error,
         );

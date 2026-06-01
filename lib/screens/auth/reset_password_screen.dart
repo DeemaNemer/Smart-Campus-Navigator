@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../config/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/common/system_message.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   final String prefilledToken;
@@ -47,11 +48,11 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset successfully! Please sign in.'),
-          backgroundColor: AppColors.success,
-        ),
+      showSystemMessage(
+        context,
+        message: 'Password reset successfully. Please sign in.',
+        icon: Icons.check_circle_outline,
+        color: AppColors.success,
       );
       // Go back to login
       context.go('/login');
@@ -65,10 +66,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: const Text('Reset Password'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
         ),
       ),

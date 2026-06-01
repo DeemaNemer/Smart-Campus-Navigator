@@ -180,7 +180,7 @@ class ApiService {
     String? description,
     required String date, // YYYY-MM-DD
     required String time, // HH:MM
-    int? locationRoomId,
+    required int locationRoomId,
     String? locationText,
     required String targetAudience, // students/employees/all
     String? posterUrl,
@@ -193,7 +193,7 @@ class ApiService {
           'description': description,
           'date': date,
           'time': time,
-          if (locationRoomId != null) 'location_room_id': locationRoomId,
+          'location_room_id': locationRoomId,
           if (locationText != null && locationText.trim().isNotEmpty)
             'location_text': locationText.trim(),
           'target_audience': targetAudience,
@@ -364,6 +364,11 @@ class ApiService {
     if (e.response != null) {
       final data = e.response!.data;
       if (data is Map && data.containsKey('detail')) {
+        final detail = data['detail'];
+        final detailText = detail.toString();
+        if (detailText.contains('location_room_id')) {
+          return 'Please choose a room or enter a valid custom location.';
+        }
         return data['detail'].toString();
       }
     }
@@ -390,12 +395,11 @@ class ApiService {
     required double userX,
     required double userY,
     required int userFloor,
-    int? sourceRoomId,
-    String? sourceZone,
-    int? destRoomId,
+    required int destRoomId,
     required double destX,
     required double destY,
     required int destFloor,
+    String? sourceZone,
     String? destZone,
   }) async {
     try {
@@ -405,12 +409,11 @@ class ApiService {
           'user_x': userX,
           'user_y': userY,
           'user_floor': userFloor,
-          if (sourceRoomId != null) 'source_room_id': sourceRoomId,
-          if (sourceZone != null) 'source_zone': sourceZone,
-          if (destRoomId != null && destRoomId > 0) 'dest_room_id': destRoomId,
+          'dest_room_id': destRoomId,
           'dest_x': destX,
           'dest_y': destY,
           'dest_floor': destFloor,
+          if (sourceZone != null) 'source_zone': sourceZone,
           if (destZone != null) 'dest_zone': destZone,
         },
       );
@@ -422,32 +425,6 @@ class ApiService {
         final errorData = e.response!.data;
         if (errorData is Map && errorData.containsKey('detail')) {
           throw 'Navigation error: ${errorData['detail']}';
-        }
-      }
-      throw _handleError(e);
-    }
-  }
-
-  Future<Map<String, dynamic>> localizeBssid({
-    required Map<String, double> bssidReadings,
-    String sessionId = 'default',
-  }) async {
-    try {
-      final response = await _dio.post(
-        '/localize_bssid',
-        data: {
-          'bssid_readings': bssidReadings,
-          'session_id': sessionId,
-        },
-      );
-      return response.data as Map<String, dynamic>;
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 400) {
-        final data = e.response?.data;
-        final detail = data is Map ? data['detail']?.toString() : null;
-        if (detail != null &&
-            (detail.contains('BSSID') || detail.contains('WAP'))) {
-          throw 'Indoor location is available inside the IT building only. Move near the university access points and try again.';
         }
       }
       throw _handleError(e);
